@@ -156,9 +156,6 @@ if [[ -n "${deps_prefix}" ]]; then
     deps_prefix="$(cd "${deps_prefix}" && pwd)"
     export PATH="${deps_prefix}/bin:${PATH}"
     export PKG_CONFIG_LIBDIR="${deps_prefix}/lib/pkgconfig:${deps_prefix}/share/pkgconfig${PKG_CONFIG_LIBDIR:+:${PKG_CONFIG_LIBDIR}}"
-    if [[ "$(uname -s)" == "Darwin" ]]; then
-        export DYLD_LIBRARY_PATH="${deps_prefix}/lib${DYLD_LIBRARY_PATH:+:${DYLD_LIBRARY_PATH}}"
-    fi
 fi
 
 if [[ "$(uname -s)" == "Darwin" ]]; then
