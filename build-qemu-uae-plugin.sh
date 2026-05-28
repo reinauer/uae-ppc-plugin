@@ -261,7 +261,12 @@ build_qemu_uae() {
     local ninja
     ninja="$(find_ninja)" || die "ninja not found; set QEMU_UAE_NINJA"
 
-    (cd "${source_dir}" && ./configure-qemu-uae --ninja="${ninja}" "${configure_args[@]}")
+    (
+        cd "${source_dir}"
+        ./configure-qemu-uae \
+            --ninja="${ninja}" \
+            ${configure_args[@]+"${configure_args[@]}"}
+    )
     "${ninja}" -C "${source_dir}/build" -j "${jobs}" qemu-uae.so
 
     [[ -f "${source_dir}/build/qemu-uae.so" ]] || die "qemu-uae.so was not produced"
