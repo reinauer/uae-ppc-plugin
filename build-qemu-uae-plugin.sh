@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-qemu_version="11.0.0"
+qemu_version="11.0.1"
 qemu_archive="qemu-${qemu_version}.tar.xz"
 qemu_url_default="https://download.qemu.org/${qemu_archive}"
-qemu_sha256="c04ca36012653f32d11c674d370cf52a710e7d3f18c2d8b63e4932052a4854d6"
+qemu_sha256="0d235f5820278d914a3155ec27af8e4258d697ea892895570807d69c0cb8cd64"
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 patch_dir="${QEMU_UAE_PATCH_DIR:-${script_dir}/patches}"
