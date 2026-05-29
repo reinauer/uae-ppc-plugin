@@ -222,10 +222,10 @@ apply_qemu_patch_file() {
     local patch_name
     patch_name="$(basename "${patch_file}")"
 
-    if (cd "${source_dir}" && patch -p1 -C -f < "${patch_file}" >/dev/null); then
+    if (cd "${source_dir}" && patch -p1 --dry-run -f < "${patch_file}" >/dev/null); then
         echo "applying ${patch_name}"
         (cd "${source_dir}" && patch -p1 -f < "${patch_file}")
-    elif (cd "${source_dir}" && patch -p1 -R -C -f < "${patch_file}" >/dev/null); then
+    elif (cd "${source_dir}" && patch -p1 -R --dry-run -f < "${patch_file}" >/dev/null); then
         echo "${patch_name} already applied"
     else
         die "${patch_name} does not apply cleanly to ${source_dir}"
