@@ -27,16 +27,19 @@ jobs:
             runner: windows-latest
             msystem: MINGW32
             package_prefix: mingw-w64-i686
+            host_cpu: i386
             artifact: qemu-uae-windows-32bit
           - label: 64-bit
             runner: windows-latest
             msystem: CLANG64
             package_prefix: mingw-w64-clang-x86_64
+            host_cpu: x86_64
             artifact: qemu-uae-windows-64bit
           - label: ARM64
             runner: windows-11-arm
             msystem: CLANGARM64
             package_prefix: mingw-w64-clang-aarch64
+            host_cpu: aarch64
             artifact: qemu-uae-windows-arm64
 
     defaults:
@@ -79,10 +82,15 @@ jobs:
           export QEMU_UAE_WORK_DIR="${workspace}/build/${{ matrix.msystem }}"
           export QEMU_UAE_NINJA="$(command -v ninja)"
 
+          command -v gcc || true
+          gcc --version || true
+
           ./build-qemu-uae-plugin.sh \
             --clean \
             --output "${artifact_dir}/qemu-uae.dll" \
-            --jobs "$(nproc)"
+            --jobs "$(nproc)" \
+            -- \
+            --cpu="${{ matrix.host_cpu }}"
 
           strip "${artifact_dir}/qemu-uae.dll"
           file "${artifact_dir}/qemu-uae.dll"

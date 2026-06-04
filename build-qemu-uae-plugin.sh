@@ -242,7 +242,7 @@ extract_qemu() {
     if host_needs_tar_symlink_excludes; then
         tar \
             "--exclude=qemu-${qemu_version}/roms" \
-            "--exclude=qemu-${qemu_version}/tests" \
+            "--exclude=qemu-${qemu_version}/tests/lcitool" \
             -xf "${tarball}" -C "${extract_dir}"
     else
         tar -xf "${tarball}" -C "${extract_dir}"
