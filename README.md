@@ -7,7 +7,7 @@ The original repository is <https://github.com/reinauer/qemu-uae>.
 
 The helper downloads the upstream QEMU 11.0.1 source archive, verifies its
 SHA-256 checksum, applies the ordered patches from `patches/`, and builds
-`qemu-uae.so`.
+`qemu-uae.so` on Unix/macOS or `qemu-uae.dll` on Windows.
 
 ## Requirements
 
@@ -43,7 +43,7 @@ By default this creates:
 
 - `build/downloads/qemu-11.0.1.tar.xz`
 - `build/qemu-11.0.1-uae/`
-- `build/qemu-uae.so`
+- `build/qemu-uae.so` or `build/qemu-uae.dll`
 
 Useful options:
 

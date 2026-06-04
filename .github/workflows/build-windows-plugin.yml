@@ -1,0 +1,104 @@
+name: Build Windows QEMU-UAE PPC plugin
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  build-windows-plugin:
+    name: Build Windows ${{ matrix.label }}
+    runs-on: ${{ matrix.runner }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: 32-bit
+            runner: windows-latest
+            msystem: MINGW32
+            package_prefix: mingw-w64-i686
+            artifact: qemu-uae-windows-32bit
+          - label: 64-bit
+            runner: windows-latest
+            msystem: CLANG64
+            package_prefix: mingw-w64-clang-x86_64
+            artifact: qemu-uae-windows-64bit
+          - label: ARM64
+            runner: windows-11-arm
+            msystem: CLANGARM64
+            package_prefix: mingw-w64-clang-aarch64
+            artifact: qemu-uae-windows-arm64
+
+    defaults:
+      run:
+        shell: msys2 {0}
+
+    steps:
+      - name: Checkout QEMU-UAE PPC plugin builder
+        uses: actions/checkout@v4
+
+      - name: Install MSYS2 build dependencies
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{ matrix.msystem }}
+          update: true
+          install: >-
+            base-devel
+            curl
+            diffutils
+            file
+            git
+            patch
+            tar
+            xz
+            ${{ matrix.package_prefix }}-glib2
+            ${{ matrix.package_prefix }}-meson
+            ${{ matrix.package_prefix }}-ninja
+            ${{ matrix.package_prefix }}-pkgconf
+            ${{ matrix.package_prefix }}-python
+            ${{ matrix.package_prefix }}-toolchain
+
+      - name: Build QEMU-UAE PPC plugin
+        run: |
+          set -euo pipefail
+
+          workspace="$(cygpath -u "${GITHUB_WORKSPACE}")"
+          artifact_dir="${workspace}/artifacts/${{ matrix.artifact }}"
+          mkdir -p "${artifact_dir}"
+
+          export QEMU_UAE_WORK_DIR="${workspace}/build/${{ matrix.msystem }}"
+          export QEMU_UAE_NINJA="$(command -v ninja)"
+
+          ./build-qemu-uae-plugin.sh \
+            --clean \
+            --output "${artifact_dir}/qemu-uae.dll" \
+            --jobs "$(nproc)"
+
+          strip "${artifact_dir}/qemu-uae.dll"
+          file "${artifact_dir}/qemu-uae.dll"
+
+          ldd "${artifact_dir}/qemu-uae.dll" |
+            awk '/=>/ { print $3 } /^[[:space:]]*\/mingw/ { print $1 }' |
+            while IFS= read -r dep; do
+              if [[ -f "${dep}" && "${dep}" == /mingw*/*.dll ]]; then
+                cp -n "${dep}" "${artifact_dir}/"
+              fi
+            done
+          ls -la "${artifact_dir}"
+
+      - name: Upload QEMU-UAE PPC plugin
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: artifacts/${{ matrix.artifact }}
+          if-no-files-found: error

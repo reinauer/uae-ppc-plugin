@@ -1,0 +1,67 @@
+name: Build macOS 13 QEMU-UAE PPC plugin
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  MACOSX_DEPLOYMENT_TARGET: "13.0"
+  BUILD_DIR: ${{ github.workspace }}/build/macos-13
+  ARTIFACT_DIR: ${{ github.workspace }}/artifacts/macos-13
+
+jobs:
+  build-macos-13-plugin:
+    name: Build macOS 13 plugin
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout QEMU-UAE PPC plugin builder
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          set -euo pipefail
+
+          brew install \
+            glib \
+            meson \
+            ninja \
+            pkgconf
+
+      - name: Build QEMU-UAE PPC plugin
+        run: |
+          set -euo pipefail
+
+          mkdir -p "${ARTIFACT_DIR}"
+
+          export QEMU_UAE_WORK_DIR="${BUILD_DIR}/qemu-uae"
+          export QEMU_UAE_NINJA="$(command -v ninja)"
+
+          ./build-qemu-uae-plugin.sh \
+            --clean \
+            --output "${ARTIFACT_DIR}/qemu-uae.so" \
+            --jobs "$(sysctl -n hw.ncpu)"
+
+          strip -x "${ARTIFACT_DIR}/qemu-uae.so"
+          otool -L "${ARTIFACT_DIR}/qemu-uae.so"
+
+      - name: Upload QEMU-UAE PPC plugin
+        uses: actions/upload-artifact@v4
+        with:
+          name: qemu-uae-macos-13
+          path: artifacts/macos-13/qemu-uae.so
+          if-no-files-found: error

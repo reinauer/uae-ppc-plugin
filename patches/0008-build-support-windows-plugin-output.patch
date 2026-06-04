@@ -1,0 +1,94 @@
+From 0e4bb0816c0aa98ae79f5eeb61d91443545dcdb4 Mon Sep 17 00:00:00 2001
+From: Stefan Reinauer <stefan.reinauer@coreboot.org>
+Date: Thu, 4 Jun 2026 13:50:17 -0700
+Subject: [PATCH 8/8] build: support Windows QEMU-UAE plugin output
+
+Make the QEMU-UAE configure wrapper respect an existing MSYS2
+compiler selection and prefer clang when it is available. The Windows
+clang64 and clangarm64 environments need that path while the i686
+MinGW32 environment can continue using GCC.
+
+Select the shared-library suffix from the host OS so Windows builds
+produce qemu-uae.dll and Unix/macOS builds keep qemu-uae.so.
+---
+ README.md          |  6 ++++--
+ configure-qemu-uae | 18 +++++++++++++++---
+ meson.build        |  3 ++-
+ 3 files changed, 21 insertions(+), 6 deletions(-)
+
+diff --git a/README.md b/README.md
+index bb8e4f4788..286700efbd 100644
+--- a/README.md
++++ b/README.md
+@@ -26,14 +26,16 @@ cd build
+ ninja
+ ```
+ 
+-The shared library will be created at `build/qemu-uae.so`.
++The shared library will be created as `build/qemu-uae.so` on Unix
++hosts or `build/qemu-uae.dll` on Windows hosts.
+ 
+ ### Build Options
+ 
+ The `configure-qemu-uae` script configures QEMU with minimal features required for UAE:
+ 
+ - Target: `ppc-softmmu` only
+-- Builds as shared library (`qemu-uae.so`) instead of executable
++- Builds as shared library (`qemu-uae.so` or `qemu-uae.dll`) instead
++  of executable
+ - Disables unnecessary features (SDL, GTK, VNC, KVM, etc.)
+ 
+ Debug options can be enabled by uncommenting lines in `configure-qemu-uae`:
+diff --git a/configure-qemu-uae b/configure-qemu-uae
+index 43a5a2f277..ad9212c452 100755
+--- a/configure-qemu-uae
++++ b/configure-qemu-uae
+@@ -15,9 +15,21 @@ EXTRA_CFLAGS="-DDEBUG_UNASSIGNED"
+ 
+ OS_NAME=$(uname -s)
+ case $OS_NAME in
+-MINGW*|MSYS*)
+-    export CC=gcc
+-    export CXX=g++
++MINGW*|MSYS*|CLANG*|UCRT*)
++    if [ -z "${CC:-}" ]; then
++        if command -v clang >/dev/null 2>&1; then
++            export CC=clang
++        else
++            export CC=gcc
++        fi
++    fi
++    if [ -z "${CXX:-}" ]; then
++        if command -v clang++ >/dev/null 2>&1; then
++            export CXX=clang++
++        else
++            export CXX=g++
++        fi
++    fi
+     ;;
+ *)
+     EXTRA_CFLAGS="$EXTRA_CFLAGS -fPIC"
+diff --git a/meson.build b/meson.build
+index dd90b1647a..ed5bc88f42 100644
+--- a/meson.build
++++ b/meson.build
+@@ -4452,6 +4452,7 @@ foreach target : target_dirs
+     if get_option('qemu_uae') and target_name == 'ppc'
+       qemu_uae_link_args = []
+       qemu_uae_link_depends = [block_syms, qemu_syms]
++      qemu_uae_suffix = host_os == 'windows' ? 'dll' : 'so'
+       if host_os == 'darwin'
+         qemu_uae_exports = files('uae/qemu-uae-ld64.symbols')
+         qemu_uae_link_depends += qemu_uae_exports
+@@ -4471,7 +4472,7 @@ foreach target : target_dirs
+                  link_depends: qemu_uae_link_depends,
+                  link_args: qemu_uae_link_args,
+                  name_prefix: '',
+-                 name_suffix: 'so')
++                 name_suffix: qemu_uae_suffix)
+       emulators += {'qemu-uae': emulator}
+       # Also add qemu-system-ppc alias for test compatibility
+       emulators += {'qemu-system-ppc': emulator}
+-- 
+2.50.1 (Apple Git-155)
+

@@ -14,25 +14,37 @@ qemu_url="${QEMU_UAE_QEMU_URL:-${qemu_url_default}}"
 tarball="${QEMU_UAE_TARBALL:-}"
 source_dir="${QEMU_UAE_SOURCE_DIR:-}"
 output_plugin="${QEMU_UAE_OUTPUT_PLUGIN:-}"
+plugin_name="${QEMU_UAE_PLUGIN_NAME:-}"
 deps_prefix="${QEMU_UAE_DEPS_PREFIX:-${WINUAE_QEMU_UAE_DEPS_PREFIX:-}}"
 jobs="${QEMU_UAE_JOBS:-}"
 clean=0
 verify=1
 configure_args=()
 
+host_plugin_name() {
+    case "$(uname -s)" in
+        MINGW*|MSYS*|CLANG*|UCRT*|CYGWIN*)
+            echo "qemu-uae.dll"
+            ;;
+        *)
+            echo "qemu-uae.so"
+            ;;
+    esac
+}
+
 usage() {
     cat <<EOF
 Usage: $0 [options] [-- configure-arg ...]
 
 Download QEMU ${qemu_version}, apply the QEMU-UAE patch deck, and build
-qemu-uae.so.
+qemu-uae.so or qemu-uae.dll.
 
 Options:
   --work-dir DIR       Working directory. Default: ./build next to script.
   --source-dir DIR     Patched QEMU source directory.
   --tarball FILE       Use an existing QEMU ${qemu_version} tarball.
   --url URL            Download URL. Default: ${qemu_url_default}
-  --output FILE        Copy qemu-uae.so to FILE after building.
+  --output FILE        Copy the built plugin to FILE.
   --patch-dir DIR      Directory containing ordered *.patch files.
   -j, --jobs N         Ninja parallelism.
   --clean              Remove the source directory before extracting.
@@ -42,6 +54,7 @@ Options:
 Environment:
   QEMU_UAE_PATCH       Single patch file override.
   QEMU_UAE_PATCH_DIR   Directory containing ordered *.patch files.
+  QEMU_UAE_PLUGIN_NAME  Built plugin file name. Defaults to host suffix.
   QEMU_UAE_DEPS_PREFIX  Prefix containing glib-2.0 and slirp pkg-config files.
   QEMU_UAE_NINJA        Ninja executable. Defaults to ninja in PATH.
   MACOSX_DEPLOYMENT_TARGET or WINUAE_MACOS_DEPLOYMENT_TARGET
@@ -133,8 +146,11 @@ fi
 if [[ -z "${source_dir}" ]]; then
     source_dir="${work_dir}/qemu-${qemu_version}-uae"
 fi
+if [[ -z "${plugin_name}" ]]; then
+    plugin_name="$(host_plugin_name)"
+fi
 if [[ -z "${output_plugin}" ]]; then
-    output_plugin="${work_dir}/qemu-uae.so"
+    output_plugin="${work_dir}/${plugin_name}"
 fi
 
 if [[ -z "${jobs}" ]]; then
@@ -264,11 +280,11 @@ build_qemu_uae() {
             --ninja="${ninja}" \
             ${configure_args[@]+"${configure_args[@]}"}
     )
-    "${ninja}" -C "${source_dir}/build" -j "${jobs}" qemu-uae.so
+    "${ninja}" -C "${source_dir}/build" -j "${jobs}" "${plugin_name}"
 
-    [[ -f "${source_dir}/build/qemu-uae.so" ]] || die "qemu-uae.so was not produced"
+    [[ -f "${source_dir}/build/${plugin_name}" ]] || die "${plugin_name} was not produced"
     mkdir -p "$(dirname "${output_plugin}")"
-    cp "${source_dir}/build/qemu-uae.so" "${output_plugin}"
+    cp "${source_dir}/build/${plugin_name}" "${output_plugin}"
 }
 
 download_qemu
