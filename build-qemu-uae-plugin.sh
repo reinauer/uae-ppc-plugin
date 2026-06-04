@@ -239,14 +239,14 @@ extract_qemu() {
     local extract_dir="${work_dir}/.extract.$$"
     rm -rf "${extract_dir}"
     mkdir -p "${extract_dir}"
-    local tar_args=()
     if host_needs_tar_symlink_excludes; then
-        tar_args+=(
-            "--exclude=qemu-${qemu_version}/roms"
-            "--exclude=qemu-${qemu_version}/tests"
-        )
+        tar \
+            "--exclude=qemu-${qemu_version}/roms" \
+            "--exclude=qemu-${qemu_version}/tests" \
+            -xf "${tarball}" -C "${extract_dir}"
+    else
+        tar -xf "${tarball}" -C "${extract_dir}"
     fi
-    tar "${tar_args[@]}" -xf "${tarball}" -C "${extract_dir}"
     mv "${extract_dir}/qemu-${qemu_version}" "${source_dir}"
     rm -rf "${extract_dir}"
 }
