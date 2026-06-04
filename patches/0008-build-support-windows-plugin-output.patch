@@ -1,4 +1,4 @@
-From 0e4bb0816c0aa98ae79f5eeb61d91443545dcdb4 Mon Sep 17 00:00:00 2001
+From b02d736557b0e523a408a563ec82b35d1eae3aa2 Mon Sep 17 00:00:00 2001
 From: Stefan Reinauer <stefan.reinauer@coreboot.org>
 Date: Thu, 4 Jun 2026 13:50:17 -0700
 Subject: [PATCH 8/8] build: support Windows QEMU-UAE plugin output
@@ -10,11 +10,17 @@ MinGW32 environment can continue using GCC.
 
 Select the shared-library suffix from the host OS so Windows builds
 produce qemu-uae.dll and Unix/macOS builds keep qemu-uae.so.
+
+Mark exported callback storage declarations with matching data export
+attributes so Windows clang accepts the exported definitions.
 ---
  README.md          |  6 ++++--
  configure-qemu-uae | 18 +++++++++++++++---
  meson.build        |  3 ++-
- 3 files changed, 21 insertions(+), 6 deletions(-)
+ uae/api.h          |  5 +++++
+ uae/log.h          |  2 +-
+ uae/ppc.h          | 10 ++++++----
+ 6 files changed, 33 insertions(+), 11 deletions(-)
 
 diff --git a/README.md b/README.md
 index bb8e4f4788..286700efbd 100644
@@ -89,6 +95,74 @@ index dd90b1647a..ed5bc88f42 100644
        emulators += {'qemu-uae': emulator}
        # Also add qemu-system-ppc alias for test compatibility
        emulators += {'qemu-system-ppc': emulator}
+diff --git a/uae/api.h b/uae/api.h
+index fdbc4acb50..b87dec8431 100644
+--- a/uae/api.h
++++ b/uae/api.h
+@@ -19,8 +19,10 @@
+ 
+ #ifdef __cplusplus
+ #define UAE_EXTERN_C extern "C"
++#define UAE_EXTERN_C_DATA extern "C"
+ #else
+ #define UAE_EXTERN_C
++#define UAE_EXTERN_C_DATA extern
+ #endif
+ 
+ /* UAE_EXPORT / UAE_IMPORT are mainly intended as helpers for UAEAPI
+@@ -34,6 +36,9 @@
+ #define UAE_IMPORT
+ #endif
+ 
++#define UAE_EXPORT_DATA UAE_EXTERN_C_DATA UAE_EXPORT
++#define UAE_IMPORT_DATA UAE_EXTERN_C_DATA UAE_IMPORT
++
+ /* UAEAPI marks a function for export across library boundaries. You'll
+  * likely want to use this together with UAECALL. */
+ 
+diff --git a/uae/log.h b/uae/log.h
+index 83b7a0fd72..4424a7a0eb 100644
+--- a/uae/log.h
++++ b/uae/log.h
+@@ -21,7 +21,7 @@ typedef void (UAECALL *uae_log_function)(const char *format, ...) UAE_PRINTF_FOR
+ //UAEAPI void UAECALL uae_log(const char *format, ...) UAE_PRINTF_FORMAT(1, 2);
+ void UAECALL uae_log(const char *format, ...) UAE_PRINTF_FORMAT(1, 2);
+ #else
+-extern uae_log_function uae_log;
++UAE_EXPORT_DATA uae_log_function uae_log;
+ #endif
+ 
+ #ifdef FSUAE // NL
+diff --git a/uae/ppc.h b/uae/ppc.h
+index 2e23b00ae6..312cd445b3 100644
+--- a/uae/ppc.h
++++ b/uae/ppc.h
+@@ -17,8 +17,10 @@
+ 
+ #ifdef UAE
+ #define PPCAPI UAE_EXTERN_C UAE_IMPORT
++#define PPCDATA UAE_IMPORT_DATA
+ #else
+ #define PPCAPI UAE_EXTERN_C UAE_EXPORT
++#define PPCDATA UAE_EXPORT_DATA
+ #endif
+ #define PPCCALL UAECALL
+ 
+@@ -84,10 +86,10 @@ bool UAECALL uae_ppc_io_mem_write64(uint32_t addr, uint64_t data);
+ 
+ #else
+ 
+-extern uae_ppc_io_mem_read_function uae_ppc_io_mem_read;
+-extern uae_ppc_io_mem_write_function uae_ppc_io_mem_write;
+-extern uae_ppc_io_mem_read64_function uae_ppc_io_mem_read64;
+-extern uae_ppc_io_mem_write64_function uae_ppc_io_mem_write64;
++PPCDATA uae_ppc_io_mem_read_function uae_ppc_io_mem_read;
++PPCDATA uae_ppc_io_mem_write_function uae_ppc_io_mem_write;
++PPCDATA uae_ppc_io_mem_read64_function uae_ppc_io_mem_read64;
++PPCDATA uae_ppc_io_mem_write64_function uae_ppc_io_mem_write64;
+ 
+ #endif
+ 
 -- 
 2.50.1 (Apple Git-155)
 
