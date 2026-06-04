@@ -23,12 +23,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - label: 32-bit
-            runner: windows-latest
-            msystem: MINGW32
-            package_prefix: mingw-w64-i686
-            host_cpu: i386
-            artifact: qemu-uae-windows-32bit
           - label: 64-bit
             runner: windows-latest
             msystem: CLANG64
@@ -81,9 +75,6 @@ jobs:
 
           export QEMU_UAE_WORK_DIR="${workspace}/build/${{ matrix.msystem }}"
           export QEMU_UAE_NINJA="$(command -v ninja)"
-
-          command -v gcc || true
-          gcc --version || true
 
           ./build-qemu-uae-plugin.sh \
             --clean \

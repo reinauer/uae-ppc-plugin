@@ -9,6 +9,10 @@ The helper downloads the upstream QEMU 11.0.1 source archive, verifies its
 SHA-256 checksum, applies the ordered patches from `patches/`, and builds
 `qemu-uae.so` on Unix/macOS or `qemu-uae.dll` on Windows.
 
+QEMU 11 no longer supports system emulator builds on 32-bit hosts, so this
+repository builds Windows 64-bit and Windows ARM64 plugins. Win32 users should
+continue using the older QEMU 2.2 based plugin.
+
 ## Requirements
 
 Install the normal QEMU build dependencies for the host platform, plus:
