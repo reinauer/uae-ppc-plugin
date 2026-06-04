@@ -1,10 +1,22 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-qemu_version="11.0.1"
+qemu_version="${QEMU_UAE_QEMU_VERSION:-11.0.1}"
 qemu_archive="qemu-${qemu_version}.tar.xz"
 qemu_url_default="https://download.qemu.org/${qemu_archive}"
-qemu_sha256="0d235f5820278d914a3155ec27af8e4258d697ea892895570807d69c0cb8cd64"
+
+case "${qemu_version}" in
+    9.2.4)
+        qemu_sha256_default="f3cc1c4eabfdb288218ac3e33763dbe9e276d8bc890b867a2335d58de2ddd39a"
+        ;;
+    11.0.1)
+        qemu_sha256_default="0d235f5820278d914a3155ec27af8e4258d697ea892895570807d69c0cb8cd64"
+        ;;
+    *)
+        qemu_sha256_default=""
+        ;;
+esac
+qemu_sha256="${QEMU_UAE_QEMU_SHA256:-${qemu_sha256_default}}"
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 patch_dir="${QEMU_UAE_PATCH_DIR:-${script_dir}/patches}"
@@ -65,6 +77,8 @@ Options:
 Environment:
   QEMU_UAE_PATCH       Single patch file override.
   QEMU_UAE_PATCH_DIR   Directory containing ordered *.patch files.
+  QEMU_UAE_QEMU_VERSION QEMU version to download. Default: 11.0.1.
+  QEMU_UAE_QEMU_SHA256 Expected QEMU archive SHA-256.
   QEMU_UAE_PLUGIN_NAME  Built plugin file name. Defaults to host suffix.
   QEMU_UAE_DEPS_PREFIX  Prefix containing glib-2.0 and slirp pkg-config files.
   QEMU_UAE_NINJA        Ninja executable. Defaults to ninja in PATH.
@@ -221,6 +235,7 @@ sha256_file() {
 
 verify_qemu() {
     [[ "${verify}" == "1" ]] || return
+    [[ -n "${qemu_sha256}" ]] || die "no SHA-256 known for QEMU ${qemu_version}; set QEMU_UAE_QEMU_SHA256 or use --no-verify"
 
     local actual
     actual="$(sha256_file "${tarball}")" || die "no SHA-256 tool found; use --no-verify to skip"

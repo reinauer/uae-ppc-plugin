@@ -23,18 +23,30 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - label: 32-bit
+            runner: windows-latest
+            msystem: MINGW32
+            package_prefix: mingw-w64-i686
+            host_cpu: i386
+            artifact: qemu-uae-windows-32bit
+            qemu_version: 9.2.4
+            qemu_sha256: f3cc1c4eabfdb288218ac3e33763dbe9e276d8bc890b867a2335d58de2ddd39a
           - label: 64-bit
             runner: windows-latest
             msystem: CLANG64
             package_prefix: mingw-w64-clang-x86_64
             host_cpu: x86_64
             artifact: qemu-uae-windows-64bit
+            qemu_version: 11.0.1
+            qemu_sha256: 0d235f5820278d914a3155ec27af8e4258d697ea892895570807d69c0cb8cd64
           - label: ARM64
             runner: windows-11-arm
             msystem: CLANGARM64
             package_prefix: mingw-w64-clang-aarch64
             host_cpu: aarch64
             artifact: qemu-uae-windows-arm64
+            qemu_version: 11.0.1
+            qemu_sha256: 0d235f5820278d914a3155ec27af8e4258d697ea892895570807d69c0cb8cd64
 
     defaults:
       run:
@@ -63,6 +75,8 @@ jobs:
             ${{ matrix.package_prefix }}-ninja
             ${{ matrix.package_prefix }}-pkgconf
             ${{ matrix.package_prefix }}-python
+            ${{ matrix.package_prefix }}-python-distlib
+            ${{ matrix.package_prefix }}-python-pip
             ${{ matrix.package_prefix }}-toolchain
 
       - name: Build QEMU-UAE PPC plugin
@@ -75,6 +89,14 @@ jobs:
 
           export QEMU_UAE_WORK_DIR="${workspace}/build/${{ matrix.msystem }}"
           export QEMU_UAE_NINJA="$(command -v ninja)"
+          export QEMU_UAE_QEMU_VERSION="${{ matrix.qemu_version }}"
+          export QEMU_UAE_QEMU_SHA256="${{ matrix.qemu_sha256 }}"
+
+          if [[ "${QEMU_UAE_QEMU_VERSION}" == "9.2.4" ]]; then
+            python -m pip install \
+              --disable-pip-version-check \
+              pycotap==1.3.1
+          fi
 
           ./build-qemu-uae-plugin.sh \
             --clean \

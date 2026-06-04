@@ -1,0 +1,50 @@
+From 7907c821d3f2e72cd3e02209677330a419d83131 Mon Sep 17 00:00:00 2001
+From: Stefan Reinauer <stefan.reinauer@coreboot.org>
+Date: Thu, 4 Jun 2026 19:38:57 -0700
+Subject: [PATCH] uae: support older QEMU board header path
+
+Use __has_include so QEMU-UAE can include the board declarations
+from hw/core/boards.h on QEMU 11 and hw/boards.h on QEMU 9.
+
+This lets the same patch deck build the Win32 plugin from QEMU 9.2.4
+while keeping the 64-bit lanes on QEMU 11.0.1.
+---
+ uae/qemu-uae-cpu.c  | 4 ++++
+ uae/qemu-uae-main.c | 4 ++++
+ 2 files changed, 8 insertions(+)
+
+diff --git a/uae/qemu-uae-cpu.c b/uae/qemu-uae-cpu.c
+index b8db7a4049..ac5b917c5e 100644
+--- a/uae/qemu-uae-cpu.c
++++ b/uae/qemu-uae-cpu.c
+@@ -22,7 +22,11 @@
+ #include "qemu/module.h"
+ #include "qapi/error.h"
+ #include "hw/ppc/ppc.h"
++#if __has_include("hw/core/boards.h")
+ #include "hw/core/boards.h"
++#else
++#include "hw/boards.h"
++#endif
+ #include "hw/core/qdev-properties.h"
+ #include "system/system.h"
+ #include "system/cpus.h"
+diff --git a/uae/qemu-uae-main.c b/uae/qemu-uae-main.c
+index ec76c2b38b..988c866763 100644
+--- a/uae/qemu-uae-main.c
++++ b/uae/qemu-uae-main.c
+@@ -26,7 +26,11 @@
+ #include "qapi/error.h"
+ #include "qom/object.h"
+ #include "exec/cpu-common.h"
++#if __has_include("hw/core/boards.h")
+ #include "hw/core/boards.h"
++#else
++#include "hw/boards.h"
++#endif
+ #include "system/system.h"
+ #include "system/cpus.h"
+ #include "system/runstate.h"
+-- 
+2.50.1 (Apple Git-155)
+

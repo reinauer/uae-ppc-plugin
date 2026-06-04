@@ -10,13 +10,13 @@ Build qemu-uae.so for the PPC target, request static PIC support,
 limit exported symbols to the host ABI, and disable unrelated tools,
 UI, audio, block, network, smartcard, RDMA, and host-library backends.
 ---
- configure-qemu-uae        | 97 +++++++++++++++++++++++++++++++++++++++
+ configure-qemu-uae        | 109 ++++++++++++++++++++++++++++++++++++++
  meson.build               | 32 +++++++++++++
  meson_options.txt         |  2 +
  uae/qemu-uae-ld64.symbols | 20 ++++++++
  uae/qemu-uae-main.c       |  2 -
  uae/qemu-uae.symbols      | 25 ++++++++++
- 6 files changed, 176 insertions(+), 2 deletions(-)
+ 6 files changed, 188 insertions(+), 2 deletions(-)
  create mode 100755 configure-qemu-uae
  create mode 100644 uae/qemu-uae-ld64.symbols
  create mode 100644 uae/qemu-uae.symbols
@@ -26,7 +26,7 @@ new file mode 100755
 index 000000000..346576135
 --- /dev/null
 +++ b/configure-qemu-uae
-@@ -0,0 +1,97 @@
+@@ -0,0 +1,109 @@
 +#!/bin/sh -e
 +#
 +# Configure script for building QEMU-UAE plugin
@@ -53,8 +53,14 @@ index 000000000..346576135
 +    ;;
 +esac
 +
++disable_pvg=1
++if [ -r VERSION ] && grep -Eq '^9\.' VERSION; then
++    disable_pvg=
++fi
++
 +# Run meson-based configure with minimal features for UAE
-+./configure \
++configure_qemu_uae() {
++    ./configure \
 +    --target-list=ppc-softmmu \
 +    --extra-cflags="$EXTRA_CFLAGS" \
 +    -Dqemu_uae=true \
@@ -68,7 +74,6 @@ index 000000000..346576135
 +    --disable-cocoa \
 +    --disable-vnc \
 +    --disable-dbus-display \
-+    --disable-pvg \
 +    --disable-coreaudio \
 +    --audio-drv-list= \
 +    --disable-auth-pam \
@@ -124,6 +129,13 @@ index 000000000..346576135
 +    --disable-vmdk \
 +    --disable-vpc \
 +    "$@"
++}
++
++if [ -n "$disable_pvg" ]; then
++    configure_qemu_uae --disable-pvg "$@"
++else
++    configure_qemu_uae "$@"
++fi
 diff --git a/meson.build b/meson.build
 index 94feda2eb..8b0145c76 100644
 --- a/meson.build
@@ -259,4 +271,3 @@ index 000000000..c15ee3eb5
 +};
 -- 
 2.50.1 (Apple Git-155)
-
