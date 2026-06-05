@@ -1,0 +1,52 @@
+From bec9aff885b241810981f261da4caf60e13ff3c3 Mon Sep 17 00:00:00 2001
+From: Stefan Reinauer <stefan.reinauer@coreboot.org>
+Date: Thu, 4 Jun 2026 22:25:54 -0700
+Subject: [PATCH] uae: support older QEMU system headers
+
+QEMU 11 moved system-level declarations from sysemu/ and exec/
+into system/. QEMU 9.2.4 still uses the older paths.
+
+Use __has_include to prefer the QEMU 11 names and fall back to
+the QEMU 9 layout for the Win32 plugin build.
+---
+ uae/qemu-uae-cpu.c  | 10 ++++++++++
+ uae/qemu-uae-main.c |  7 +++++++
+ 2 files changed, 17 insertions(+)
+
+diff --git a/uae/qemu-uae-cpu.c b/uae/qemu-uae-cpu.c
+index ac5b917c5e..f8cb833038 100644
+--- a/uae/qemu-uae-cpu.c
++++ b/uae/qemu-uae-cpu.c
+@@ -30,2 +30,3 @@
+ #include "hw/core/qdev-properties.h"
++#if __has_include("system/system.h")
+ #include "system/system.h"
+@@ -37,2 +38,11 @@
+ #include "system/reset.h"
++#else
++#include "sysemu/sysemu.h"
++#include "sysemu/cpus.h"
++#include "sysemu/runstate.h"
++#include "sysemu/cpu-timers.h"
++#include "exec/memory.h"
++#include "exec/address-spaces.h"
++#include "sysemu/reset.h"
++#endif
+ #include "exec/tb-flush.h"
+diff --git a/uae/qemu-uae-main.c b/uae/qemu-uae-main.c
+index 988c866763..8520ba3f59 100644
+--- a/uae/qemu-uae-main.c
++++ b/uae/qemu-uae-main.c
+@@ -33,2 +33,3 @@
+ #endif
++#if __has_include("system/system.h")
+ #include "system/system.h"
+@@ -37,2 +38,8 @@
+ #include "system/cpu-timers.h"
++#else
++#include "sysemu/sysemu.h"
++#include "sysemu/cpus.h"
++#include "sysemu/runstate.h"
++#include "sysemu/cpu-timers.h"
++#endif
+ #include "qemu-uae.h"
