@@ -114,13 +114,19 @@ jobs:
           strip "${artifact_dir}/qemu-uae.dll"
           file "${artifact_dir}/qemu-uae.dll"
 
-          ldd "${artifact_dir}/qemu-uae.dll" |
-            awk '/=>/ { print $3 } /^[[:space:]]*\/mingw/ { print $1 }' |
-            while IFS= read -r dep; do
-              if [[ -f "${dep}" && "${dep}" == /mingw*/*.dll ]]; then
-                cp -n "${dep}" "${artifact_dir}/"
-              fi
-            done
+          ldd_output="${QEMU_UAE_WORK_DIR}/qemu-uae.ldd.txt"
+          ldd "${artifact_dir}/qemu-uae.dll" | tee "${ldd_output}"
+          msys2_deps="$(
+            awk '/=>/ { print $3 } /^[[:space:]]*\// { print $1 }' \
+              "${ldd_output}" |
+            grep -E '^/(mingw|ucrt|clang|msys)[^/]*/.*[.]dll$' || true
+          )"
+          if [[ -n "${msys2_deps}" ]]; then
+            echo "qemu-uae.dll still depends on MSYS2 DLLs:" >&2
+            echo "${msys2_deps}" >&2
+            exit 1
+          fi
+
           ls -la "${artifact_dir}"
 
       - name: Upload QEMU-UAE PPC plugin

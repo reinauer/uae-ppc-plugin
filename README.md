@@ -5,13 +5,15 @@ QEMU-UAE PowerPC plugin for UAE-based Amiga emulators.
 
 The original repository is <https://github.com/reinauer/qemu-uae>.
 
-The helper downloads the upstream QEMU 11.0.1 source archive, verifies its
-SHA-256 checksum, applies the ordered patches from `patches/`, and builds
-`qemu-uae.so` on Unix/macOS or `qemu-uae.dll` on Windows.
+The helper downloads the upstream QEMU source archive, verifies its SHA-256
+checksum, applies the ordered patches from `patches/`, and builds
+`qemu-uae.so` on Unix/macOS or `qemu-uae.dll` on Windows. By default it builds
+QEMU 11.0.1.
 
 QEMU 11 no longer supports system emulator builds on 32-bit hosts, so this
-repository builds Windows 64-bit and Windows ARM64 plugins. Win32 users should
-continue using the older QEMU 2.2 based plugin.
+repository builds the Windows 64-bit and Windows ARM64 plugins from QEMU
+11.0.1, while the Windows 32-bit workflow builds from QEMU 9.2.4 with the
+additional patches in `patches-qemu-9.2.4/`.
 
 ## Requirements
 
@@ -48,6 +50,10 @@ By default this creates:
 - `build/downloads/qemu-11.0.1.tar.xz`
 - `build/qemu-11.0.1-uae/`
 - `build/qemu-uae.so` or `build/qemu-uae.dll`
+
+Windows builds pass QEMU's `--static` option so GLib, zlib, winpthread, and
+other MSYS2-supplied runtime libraries are linked into `qemu-uae.dll` instead
+of being required as sidecar DLLs.
 
 Useful options:
 

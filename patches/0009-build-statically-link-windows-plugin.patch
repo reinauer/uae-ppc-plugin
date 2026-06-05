@@ -1,0 +1,33 @@
+From 15d43301b7fda00026ff1b46c14c31c6f4bd06d6 Mon Sep 17 00:00:00 2001
+From: Stefan Reinauer <stefan.reinauer@coreboot.org>
+Date: Fri, 5 Jun 2026 15:10:00 -0700
+Subject: [PATCH 9/9] build: statically link Windows plugin dependencies
+
+The Windows plugin is loaded from WinUAE's plugin directory. If that
+directory already contains old or wrong-architecture copies of GLib,
+zlib, winpthread, or similar MinGW/MSYS2 DLLs, the Windows loader can
+pick those first and reject qemu-uae.dll with ERROR_BAD_EXE_FORMAT.
+
+Pass QEMU's --static option on Windows hosts so Meson and pkg-config
+prefer static MinGW/MSYS2 libraries and the plugin can be distributed as
+a single DLL.
+---
+ configure-qemu-uae | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/configure-qemu-uae b/configure-qemu-uae
+index ad9212c452..591df4296c 100755
+--- a/configure-qemu-uae
++++ b/configure-qemu-uae
+@@ -29,6 +29,8 @@ MINGW*|MSYS*|CLANG*|UCRT*)
+             export CXX=g++
+         fi
+     fi
++    # Keep the Windows plugin independent of sidecar MSYS2 DLLs.
++    set -- --static "$@"
+     ;;
+ *)
+     EXTRA_CFLAGS="$EXTRA_CFLAGS -fPIC"
+-- 
+2.49.0
+
