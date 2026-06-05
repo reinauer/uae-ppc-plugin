@@ -20,6 +20,7 @@ qemu_sha256="${QEMU_UAE_QEMU_SHA256:-${qemu_sha256_default}}"
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 patch_dir="${QEMU_UAE_PATCH_DIR:-${script_dir}/patches}"
+extra_patch_dir="${QEMU_UAE_EXTRA_PATCH_DIR:-}"
 patch_file="${QEMU_UAE_PATCH:-}"
 work_dir="${QEMU_UAE_WORK_DIR:-${script_dir}/build}"
 qemu_url="${QEMU_UAE_QEMU_URL:-${qemu_url_default}}"
@@ -77,6 +78,9 @@ Options:
 Environment:
   QEMU_UAE_PATCH       Single patch file override.
   QEMU_UAE_PATCH_DIR   Directory containing ordered *.patch files.
+  QEMU_UAE_EXTRA_PATCH_DIR
+                       Optional ordered *.patch directory applied after
+                       QEMU_UAE_PATCH_DIR.
   QEMU_UAE_QEMU_VERSION QEMU version to download. Default: 11.0.1.
   QEMU_UAE_QEMU_SHA256 Expected QEMU archive SHA-256.
   QEMU_UAE_PLUGIN_NAME  Built plugin file name. Defaults to host suffix.
@@ -162,6 +166,13 @@ else
         patch_files+=("${patch}")
     done < <(find "${patch_dir}" -maxdepth 1 -type f -name '*.patch' | sort)
     [[ "${#patch_files[@]}" -gt 0 ]] || die "no patch files found in ${patch_dir}"
+    if [[ -n "${extra_patch_dir}" ]]; then
+        [[ -d "${extra_patch_dir}" ]] ||
+            die "extra patch directory not found: ${extra_patch_dir}"
+        while IFS= read -r patch; do
+            patch_files+=("${patch}")
+        done < <(find "${extra_patch_dir}" -maxdepth 1 -type f -name '*.patch' | sort)
+    fi
 fi
 
 download_dir="${work_dir}/downloads"
