@@ -56,7 +56,8 @@ other MSYS2-supplied runtime libraries are linked into `qemu-uae.dll` instead
 of being required as sidecar DLLs.
 
 Set `QEMU_UAE_PDB=1` on Windows clang/lld builds to create `qemu-uae.pdb`
-next to `qemu-uae.dll`.
+next to `qemu-uae.dll`. The hosted MINGW32 CI lane uses GCC because
+`setup-msys2` does not currently provide a CLANG32 environment.
 
 Useful options:
 

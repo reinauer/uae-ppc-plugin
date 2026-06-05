@@ -32,10 +32,7 @@ jobs:
             qemu_version: 9.2.4
             qemu_sha256: f3cc1c4eabfdb288218ac3e33763dbe9e276d8bc890b867a2335d58de2ddd39a
             extra_patch_dir: patches-qemu-9.2.4
-            symbol_packages: >-
-              mingw-w64-i686-clang
-              mingw-w64-i686-lld
-            pdb: true
+            pdb: false
           - label: 64-bit
             runner: windows-latest
             msystem: CLANG64
@@ -45,7 +42,6 @@ jobs:
             qemu_version: 11.0.1
             qemu_sha256: 0d235f5820278d914a3155ec27af8e4258d697ea892895570807d69c0cb8cd64
             extra_patch_dir: ""
-            symbol_packages: ""
             pdb: false
           - label: ARM64
             runner: windows-11-arm
@@ -56,7 +52,6 @@ jobs:
             qemu_version: 11.0.1
             qemu_sha256: 0d235f5820278d914a3155ec27af8e4258d697ea892895570807d69c0cb8cd64
             extra_patch_dir: ""
-            symbol_packages: ""
             pdb: false
 
     defaults:
@@ -89,7 +84,6 @@ jobs:
             ${{ matrix.package_prefix }}-python-distlib
             ${{ matrix.package_prefix }}-python-pip
             ${{ matrix.package_prefix }}-toolchain
-            ${{ matrix.symbol_packages }}
 
       - name: Build QEMU-UAE PPC plugin
         run: |
