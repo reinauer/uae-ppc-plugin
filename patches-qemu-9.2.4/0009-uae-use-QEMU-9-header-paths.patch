@@ -1,0 +1,66 @@
+From d41f75fce7f24ef2c4c4d243f38bd3fb4a0cb244 Mon Sep 17 00:00:00 2001
+From: Stefan Reinauer <stefan.reinauer@coreboot.org>
+Date: Thu, 4 Jun 2026 23:04:24 -0700
+Subject: [PATCH] uae: use QEMU 9 header paths
+
+The QEMU 11 base patch deck uses the newer hw/core and system include
+paths. QEMU 9.2.4 still keeps those declarations under hw, sysemu, and
+exec.
+
+Rewrite the include paths in the QEMU 9 overlay instead of probing for
+both layouts in the source.
+---
+ uae/qemu-uae-cpu.c  | 18 +++++++++---------
+ uae/qemu-uae-main.c | 10 +++++-----
+ 2 files changed, 14 insertions(+), 14 deletions(-)
+
+diff --git a/uae/qemu-uae-cpu.c b/uae/qemu-uae-cpu.c
+index b8db7a4049..a35c1880bd 100644
+--- a/uae/qemu-uae-cpu.c
++++ b/uae/qemu-uae-cpu.c
+@@ -22,15 +22,15 @@
+ #include "qemu/module.h"
+ #include "qapi/error.h"
+ #include "hw/ppc/ppc.h"
+-#include "hw/core/boards.h"
+-#include "hw/core/qdev-properties.h"
+-#include "system/system.h"
+-#include "system/cpus.h"
+-#include "system/runstate.h"
+-#include "system/cpu-timers.h"
+-#include "system/memory.h"
+-#include "system/address-spaces.h"
+-#include "system/reset.h"
++#include "hw/boards.h"
++#include "hw/qdev-properties.h"
++#include "sysemu/sysemu.h"
++#include "sysemu/cpus.h"
++#include "sysemu/runstate.h"
++#include "sysemu/cpu-timers.h"
++#include "exec/memory.h"
++#include "exec/address-spaces.h"
++#include "sysemu/reset.h"
+ #include "exec/tb-flush.h"
+ #include "cpu.h"
+ #include "helper_regs.h"
+diff --git a/uae/qemu-uae-main.c b/uae/qemu-uae-main.c
+index ec76c2b38b..44dc44d361 100644
+--- a/uae/qemu-uae-main.c
++++ b/uae/qemu-uae-main.c
+@@ -26,11 +26,11 @@
+ #include "qapi/error.h"
+ #include "qom/object.h"
+ #include "exec/cpu-common.h"
+-#include "hw/core/boards.h"
+-#include "system/system.h"
+-#include "system/cpus.h"
+-#include "system/runstate.h"
+-#include "system/cpu-timers.h"
++#include "hw/boards.h"
++#include "sysemu/sysemu.h"
++#include "sysemu/cpus.h"
++#include "sysemu/runstate.h"
++#include "sysemu/cpu-timers.h"
+ #include "qemu-uae.h"
+ 
+ #include "uae/log.h"
