@@ -1,0 +1,28 @@
+From 3523e10fe6fb9c1e157bfa58ae57a9a3d23a840d Mon Sep 17 00:00:00 2001
+From: Stefan Reinauer <stefan.reinauer@coreboot.org>
+Date: Thu, 4 Jun 2026 23:39:56 -0700
+Subject: [PATCH] uae: use QEMU 9 translation block flush API
+
+QEMU 11 provides queue_tb_flush() for scheduling a translation block
+flush on a CPU. QEMU 9.2.4 still exposes tb_flush() for the same use
+case and handles entering an exclusive context when needed.
+
+Use tb_flush() in the QEMU 9 overlay so the Win32 build can compile the
+UAE CPU reset path against QEMU 9.2.4.
+---
+ uae/qemu-uae-cpu.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/uae/qemu-uae-cpu.c b/uae/qemu-uae-cpu.c
+index a35c1880bd..829139b475 100644
+--- a/uae/qemu-uae-cpu.c
++++ b/uae/qemu-uae-cpu.c
+@@ -367,7 +367,7 @@ void PPCAPI ppc_cpu_reset(void)
+     uae_log("QEMU: NIP = 0x%08x\n", state.env->nip);
+ 
+     uae_log("QEMU: Flushing all JIT translation blocks\n");
+-    queue_tb_flush(CPU(state.cpu));
++    tb_flush(CPU(state.cpu));
+ }
+ 
+ static void qemu_uae_log_cpu_state(void)
