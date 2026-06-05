@@ -32,6 +32,10 @@ jobs:
             qemu_version: 9.2.4
             qemu_sha256: f3cc1c4eabfdb288218ac3e33763dbe9e276d8bc890b867a2335d58de2ddd39a
             extra_patch_dir: patches-qemu-9.2.4
+            symbol_packages: >-
+              mingw-w64-i686-clang
+              mingw-w64-i686-lld
+            pdb: true
           - label: 64-bit
             runner: windows-latest
             msystem: CLANG64
@@ -41,6 +45,8 @@ jobs:
             qemu_version: 11.0.1
             qemu_sha256: 0d235f5820278d914a3155ec27af8e4258d697ea892895570807d69c0cb8cd64
             extra_patch_dir: ""
+            symbol_packages: ""
+            pdb: false
           - label: ARM64
             runner: windows-11-arm
             msystem: CLANGARM64
@@ -50,6 +56,8 @@ jobs:
             qemu_version: 11.0.1
             qemu_sha256: 0d235f5820278d914a3155ec27af8e4258d697ea892895570807d69c0cb8cd64
             extra_patch_dir: ""
+            symbol_packages: ""
+            pdb: false
 
     defaults:
       run:
@@ -81,6 +89,7 @@ jobs:
             ${{ matrix.package_prefix }}-python-distlib
             ${{ matrix.package_prefix }}-python-pip
             ${{ matrix.package_prefix }}-toolchain
+            ${{ matrix.symbol_packages }}
 
       - name: Build QEMU-UAE PPC plugin
         run: |
@@ -94,6 +103,10 @@ jobs:
           export QEMU_UAE_NINJA="$(command -v ninja)"
           export QEMU_UAE_QEMU_VERSION="${{ matrix.qemu_version }}"
           export QEMU_UAE_QEMU_SHA256="${{ matrix.qemu_sha256 }}"
+          if [[ "${{ matrix.pdb }}" == "true" ]]; then
+            export QEMU_UAE_PDB=1
+            export QEMU_UAE_OUTPUT_PDB="${artifact_dir}/qemu-uae.pdb"
+          fi
           if [[ -n "${{ matrix.extra_patch_dir }}" ]]; then
             export QEMU_UAE_EXTRA_PATCH_DIR="${workspace}/${{ matrix.extra_patch_dir }}"
           fi
@@ -111,8 +124,13 @@ jobs:
             -- \
             --cpu="${{ matrix.host_cpu }}"
 
-          strip "${artifact_dir}/qemu-uae.dll"
+          if [[ -z "${QEMU_UAE_PDB:-}" ]]; then
+            strip "${artifact_dir}/qemu-uae.dll"
+          fi
           file "${artifact_dir}/qemu-uae.dll"
+          if [[ -n "${QEMU_UAE_PDB:-}" ]]; then
+            file "${artifact_dir}/qemu-uae.pdb"
+          fi
 
           ldd_output="${QEMU_UAE_WORK_DIR}/qemu-uae.ldd.txt"
           ldd "${artifact_dir}/qemu-uae.dll" | tee "${ldd_output}"

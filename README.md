@@ -55,6 +55,9 @@ Windows builds pass QEMU's `--static` option so GLib, zlib, winpthread, and
 other MSYS2-supplied runtime libraries are linked into `qemu-uae.dll` instead
 of being required as sidecar DLLs.
 
+Set `QEMU_UAE_PDB=1` on Windows clang/lld builds to create `qemu-uae.pdb`
+next to `qemu-uae.dll`.
+
 Useful options:
 
 ```sh

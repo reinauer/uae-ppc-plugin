@@ -27,6 +27,7 @@ qemu_url="${QEMU_UAE_QEMU_URL:-${qemu_url_default}}"
 tarball="${QEMU_UAE_TARBALL:-}"
 source_dir="${QEMU_UAE_SOURCE_DIR:-}"
 output_plugin="${QEMU_UAE_OUTPUT_PLUGIN:-}"
+output_pdb="${QEMU_UAE_OUTPUT_PDB:-}"
 plugin_name="${QEMU_UAE_PLUGIN_NAME:-}"
 deps_prefix="${QEMU_UAE_DEPS_PREFIX:-${WINUAE_QEMU_UAE_DEPS_PREFIX:-}}"
 jobs="${QEMU_UAE_JOBS:-}"
@@ -84,6 +85,8 @@ Environment:
   QEMU_UAE_QEMU_VERSION QEMU version to download. Default: 11.0.1.
   QEMU_UAE_QEMU_SHA256 Expected QEMU archive SHA-256.
   QEMU_UAE_PLUGIN_NAME  Built plugin file name. Defaults to host suffix.
+  QEMU_UAE_PDB          Generate Windows PDB symbols when supported by clang/lld.
+  QEMU_UAE_OUTPUT_PDB   Output path for qemu-uae.pdb. Defaults next to the plugin.
   QEMU_UAE_DEPS_PREFIX  Prefix containing glib-2.0 and slirp pkg-config files.
   QEMU_UAE_NINJA        Ninja executable. Defaults to ninja in PATH.
   MACOSX_DEPLOYMENT_TARGET or WINUAE_MACOS_DEPLOYMENT_TARGET
@@ -329,6 +332,16 @@ build_qemu_uae() {
     [[ -f "${source_dir}/build/${plugin_name}" ]] || die "${plugin_name} was not produced"
     mkdir -p "$(dirname "${output_plugin}")"
     cp "${source_dir}/build/${plugin_name}" "${output_plugin}"
+
+    if [[ -n "${QEMU_UAE_PDB:-}" ]]; then
+        local pdb="${source_dir}/build/qemu-uae.pdb"
+        [[ -f "${pdb}" ]] || die "qemu-uae.pdb was not produced"
+        if [[ -z "${output_pdb}" ]]; then
+            output_pdb="${output_plugin%.*}.pdb"
+        fi
+        mkdir -p "$(dirname "${output_pdb}")"
+        cp "${pdb}" "${output_pdb}"
+    fi
 }
 
 download_qemu

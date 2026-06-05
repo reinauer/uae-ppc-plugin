@@ -1,0 +1,41 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Stefan Reinauer <stefan.reinauer@coreboot.org>
+Date: Fri, 5 Jun 2026 21:00:00 -0700
+Subject: [PATCH 11/11] build: allow Windows PDB symbol output
+
+WinUAE developers may need source-level call stacks from the QEMU-UAE
+plugin when diagnosing early DLL aborts. MinGW GCC cannot produce PDB
+files, but clang can emit CodeView records and lld can collect them into
+a PDB.
+
+Honor QEMU_UAE_PDB for Windows builds by selecting CodeView debug
+records and asking lld to write qemu-uae.pdb next to the DLL.
+---
+ configure-qemu-uae | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/configure-qemu-uae b/configure-qemu-uae
+index 591df4296c..06a80b93b0 100755
+--- a/configure-qemu-uae
++++ b/configure-qemu-uae
+@@ -31,6 +31,18 @@ MINGW*|MSYS*|CLANG*|UCRT*)
+     fi
+     # Keep the Windows plugin independent of sidecar MSYS2 DLLs.
+     set -- --static "$@"
++    if [ -n "${QEMU_UAE_PDB:-}" ]; then
++        if ! "${CC}" --version 2>/dev/null | grep -qi clang; then
++            echo "QEMU_UAE_PDB requires clang on Windows" >&2
++            exit 1
++        fi
++        if ! command -v ld.lld >/dev/null 2>&1; then
++            echo "QEMU_UAE_PDB requires ld.lld on Windows" >&2
++            exit 1
++        fi
++        EXTRA_CFLAGS="$EXTRA_CFLAGS -g -gcodeview"
++        set -- --extra-ldflags="-g -fuse-ld=lld -Wl,--pdb=qemu-uae.pdb" "$@"
++    fi
+     ;;
+ *)
+     EXTRA_CFLAGS="$EXTRA_CFLAGS -fPIC"
+--
+2.49.0
