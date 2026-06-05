@@ -1,0 +1,42 @@
+From 6dc5b3f4fd2d7e7cbe6170d02003e9e791b8e4d8 Mon Sep 17 00:00:00 2001
+From: Stefan Reinauer <stefan.reinauer@coreboot.org>
+Date: Fri, 5 Jun 2026 15:55:00 -0700
+Subject: [PATCH 10/10] build: link iconv for static Windows plugin
+
+Static MSYS2 libintl depends on libiconv. Normal QEMU executables carry
+that through the regular dependency graph, but the QEMU-UAE plugin uses a
+custom shared_library() target and only links the per-target dependency
+set.
+
+Add libiconv explicitly for static Windows plugin links so the single-DLL
+build can resolve libintl's libiconv_open() and libiconv() references.
+---
+ meson.build | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/meson.build b/meson.build
+index ed5bc88f42..cc5b2aebc9 100644
+--- a/meson.build
++++ b/meson.build
+@@ -4453,6 +4453,10 @@ foreach target : target_dirs
+       qemu_uae_link_args = []
+       qemu_uae_link_depends = [block_syms, qemu_syms]
+       qemu_uae_suffix = host_os == 'windows' ? 'dll' : 'so'
++      qemu_uae_deps = arch_deps + exe['dependencies']
++      if host_os == 'windows' and get_option('prefer_static')
++        qemu_uae_deps += cc.find_library('iconv', required: true)
++      endif
+       if host_os == 'darwin'
+         qemu_uae_exports = files('uae/qemu-uae-ld64.symbols')
+         qemu_uae_link_depends += qemu_uae_exports
+@@ -4468,7 +4471,7 @@ foreach target : target_dirs
+       emulator = shared_library('qemu-uae',
+                  install: true,
+                  c_args: c_args,
+-                 dependencies: arch_deps + exe['dependencies'],
++                 dependencies: qemu_uae_deps,
+                  objects: lib.extract_all_objects(recursive: true),
+                  link_depends: qemu_uae_link_depends,
+                  link_args: qemu_uae_link_args,
+-- 
+2.49.0
