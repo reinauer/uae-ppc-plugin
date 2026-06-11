@@ -29,6 +29,7 @@ jobs:
             package_prefix: mingw-w64-i686
             host_cpu: i386
             artifact: qemu-uae-windows-32bit
+            dll_name: qemu_uae.dll
             qemu_version: 9.2.4
             qemu_sha256: f3cc1c4eabfdb288218ac3e33763dbe9e276d8bc890b867a2335d58de2ddd39a
             extra_patch_dir: patches-qemu-9.2.4
@@ -39,6 +40,7 @@ jobs:
             package_prefix: mingw-w64-clang-x86_64
             host_cpu: x86_64
             artifact: qemu-uae-windows-64bit
+            dll_name: qemu_uae_x64.dll
             qemu_version: 11.0.1
             qemu_sha256: 0d235f5820278d914a3155ec27af8e4258d697ea892895570807d69c0cb8cd64
             extra_patch_dir: ""
@@ -49,6 +51,7 @@ jobs:
             package_prefix: mingw-w64-clang-aarch64
             host_cpu: aarch64
             artifact: qemu-uae-windows-arm64
+            dll_name: qemu_uae_arm64.dll
             qemu_version: 11.0.1
             qemu_sha256: 0d235f5820278d914a3155ec27af8e4258d697ea892895570807d69c0cb8cd64
             extra_patch_dir: ""
@@ -91,6 +94,9 @@ jobs:
 
           workspace="$(cygpath -u "${GITHUB_WORKSPACE}")"
           artifact_dir="${workspace}/artifacts/${{ matrix.artifact }}"
+          plugin_name="${{ matrix.dll_name }}"
+          plugin_path="${artifact_dir}/${plugin_name}"
+          plugin_base="${plugin_name%.dll}"
           mkdir -p "${artifact_dir}"
 
           export QEMU_UAE_WORK_DIR="${workspace}/build/${{ matrix.msystem }}"
@@ -99,7 +105,7 @@ jobs:
           export QEMU_UAE_QEMU_SHA256="${{ matrix.qemu_sha256 }}"
           if [[ "${{ matrix.pdb }}" == "true" ]]; then
             export QEMU_UAE_PDB=1
-            export QEMU_UAE_OUTPUT_PDB="${artifact_dir}/qemu-uae.pdb"
+            export QEMU_UAE_OUTPUT_PDB="${artifact_dir}/${plugin_base}.pdb"
           fi
           if [[ -n "${{ matrix.extra_patch_dir }}" ]]; then
             export QEMU_UAE_EXTRA_PATCH_DIR="${workspace}/${{ matrix.extra_patch_dir }}"
@@ -113,23 +119,23 @@ jobs:
 
           ./build-qemu-uae-plugin.sh \
             --clean \
-            --output "${artifact_dir}/qemu-uae.dll" \
+            --output "${plugin_path}" \
             --jobs "$(nproc)" \
             -- \
             --cpu="${{ matrix.host_cpu }}"
 
           if [[ -z "${QEMU_UAE_PDB:-}" ]]; then
-            strip "${artifact_dir}/qemu-uae.dll"
+            strip "${plugin_path}"
           fi
-          file "${artifact_dir}/qemu-uae.dll"
+          file "${plugin_path}"
           if [[ -n "${QEMU_UAE_PDB:-}" ]]; then
-            file "${artifact_dir}/qemu-uae.pdb"
+            file "${artifact_dir}/${plugin_base}.pdb"
           fi
 
           ldd_output="${QEMU_UAE_WORK_DIR}/qemu-uae.ldd.txt"
-          ldd "${artifact_dir}/qemu-uae.dll" | tee "${ldd_output}"
+          ldd "${plugin_path}" | tee "${ldd_output}"
           imports_output="${QEMU_UAE_WORK_DIR}/qemu-uae.imports.txt"
-          objdump -p "${artifact_dir}/qemu-uae.dll" |
+          objdump -p "${plugin_path}" |
             awk -F': ' '/DLL Name:/ { print $2 }' |
             tee "${imports_output}"
           msys2_deps="$(
@@ -138,7 +144,7 @@ jobs:
             grep -E '^/(mingw|ucrt|clang|msys)[^/]*/.*[.]dll$' || true
           )"
           if [[ -n "${msys2_deps}" ]]; then
-            echo "qemu-uae.dll still depends on MSYS2 DLLs:" >&2
+            echo "${plugin_name} still depends on MSYS2 DLLs:" >&2
             echo "${msys2_deps}" >&2
             exit 1
           fi
@@ -148,7 +154,7 @@ jobs:
               "${imports_output}" || true
           )"
           if [[ -n "${imported_msys2_deps}" ]]; then
-            echo "qemu-uae.dll imports MSYS2 runtime DLLs:" >&2
+            echo "${plugin_name} imports MSYS2 runtime DLLs:" >&2
             echo "${imported_msys2_deps}" >&2
             exit 1
           fi

@@ -15,6 +15,13 @@ repository builds the Windows 64-bit and Windows ARM64 plugins from QEMU
 11.0.1, while the Windows 32-bit workflow builds from QEMU 9.2.4 with the
 additional patches in `patches-qemu-9.2.4/`.
 
+The Windows CI artifacts use WinUAE's per-architecture loader names so all
+three DLLs can be unpacked into the same plugin directory:
+
+- `qemu_uae.dll` for 32-bit WinUAE
+- `qemu_uae_x64.dll` for 64-bit WinUAE
+- `qemu_uae_arm64.dll` for ARM64 WinUAE
+
 ## Requirements
 
 Install the normal QEMU build dependencies for the host platform, plus:
