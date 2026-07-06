@@ -1,7 +1,7 @@
-From e5d79f8e04c7ed40ddc0e2ed0a215bc5d9fa841e Mon Sep 17 00:00:00 2001
+From 223f01bbe720eb43b7272931d9ae74777457dc83 Mon Sep 17 00:00:00 2001
 From: Stefan Reinauer <stefan.reinauer@coreboot.org>
 Date: Wed, 27 May 2026 21:37:19 -0700
-Subject: [PATCH 1/7] uae: add QEMU-UAE plugin core
+Subject: [PATCH 1/12] uae: add QEMU-UAE plugin core
 
 Add the QEMU-UAE headers, PPC CPU shim, startup path, slirp stubs,
 and internal helper declarations needed by the plugin tree.
@@ -39,10 +39,10 @@ CPU execution and drive the exported main loop.
  create mode 100644 uae/types.h
 
 diff --git a/meson.build b/meson.build
-index ab3e97eb9..94feda2eb 100644
+index 51f5f2851a..e5235d3f7b 100644
 --- a/meson.build
 +++ b/meson.build
-@@ -3846,6 +3846,7 @@ user_ss.add(files('cpu-target.c'))
+@@ -3852,6 +3852,7 @@ user_ss.add(files('cpu-target.c'))
  system_ss.add(files('cpu-target.c'))
  
  subdir('system')
@@ -51,7 +51,7 @@ index ab3e97eb9..94feda2eb 100644
  # Work around a gcc bug/misfeature wherein constant propagation looks
  # through an alias:
 diff --git a/system/cpus.c b/system/cpus.c
-index bded87feb..99b970ade 100644
+index bded87feb1..99b970ade0 100644
 --- a/system/cpus.c
 +++ b/system/cpus.c
 @@ -48,6 +48,10 @@
@@ -133,7 +133,7 @@ index bded87feb..99b970ade 100644
  {
      qemu_cond_timedwait(cond, &bql, ms);
 diff --git a/system/runstate.c b/system/runstate.c
-index 2d4e95a21..48f427f23 100644
+index 2d4e95a216..48f427f239 100644
 --- a/system/runstate.c
 +++ b/system/runstate.c
 @@ -63,6 +63,10 @@
@@ -174,7 +174,7 @@ index 2d4e95a21..48f427f23 100644
  {
      notifier_list_add(&exit_notifiers, notify);
 diff --git a/target/ppc/meson.build b/target/ppc/meson.build
-index d4ebbaf0a..fb22c4f5d 100644
+index d4ebbaf0a1..fb22c4f5dd 100644
 --- a/target/ppc/meson.build
 +++ b/target/ppc/meson.build
 @@ -60,6 +60,10 @@ ppc_system_ss.add(when: 'TARGET_PPC64', if_true: files(
@@ -190,7 +190,7 @@ index d4ebbaf0a..fb22c4f5d 100644
  target_system_arch += {'ppc': ppc_system_ss}
 diff --git a/uae/api.h b/uae/api.h
 new file mode 100644
-index 000000000..fdbc4acb5
+index 0000000000..fdbc4acb50
 --- /dev/null
 +++ b/uae/api.h
 @@ -0,0 +1,103 @@
@@ -299,7 +299,7 @@ index 000000000..fdbc4acb5
 +#endif /* UAE_API_H */
 diff --git a/uae/attributes.h b/uae/attributes.h
 new file mode 100644
-index 000000000..584aa22e7
+index 0000000000..584aa22e7b
 --- /dev/null
 +++ b/uae/attributes.h
 @@ -0,0 +1,34 @@
@@ -339,7 +339,7 @@ index 000000000..584aa22e7
 +#endif /* UAE_ATTRIBUTES_H */
 diff --git a/uae/log.h b/uae/log.h
 new file mode 100644
-index 000000000..83b7a0fd7
+index 0000000000..83b7a0fd72
 --- /dev/null
 +++ b/uae/log.h
 @@ -0,0 +1,101 @@
@@ -446,7 +446,7 @@ index 000000000..83b7a0fd7
 +#endif /* UAE_LOG_H */
 diff --git a/uae/meson.build b/uae/meson.build
 new file mode 100644
-index 000000000..890b0340f
+index 0000000000..890b0340f4
 --- /dev/null
 +++ b/uae/meson.build
 @@ -0,0 +1,6 @@
@@ -458,7 +458,7 @@ index 000000000..890b0340f
 +))
 diff --git a/uae/ppc.h b/uae/ppc.h
 new file mode 100644
-index 000000000..2e23b00ae
+index 0000000000..2e23b00ae6
 --- /dev/null
 +++ b/uae/ppc.h
 @@ -0,0 +1,140 @@
@@ -604,7 +604,7 @@ index 000000000..2e23b00ae
 +#endif /* UAE_PPC_H */
 diff --git a/uae/qemu-uae-cpu.c b/uae/qemu-uae-cpu.c
 new file mode 100644
-index 000000000..e4ff7fa04
+index 0000000000..e4ff7fa048
 --- /dev/null
 +++ b/uae/qemu-uae-cpu.c
 @@ -0,0 +1,401 @@
@@ -1011,7 +1011,7 @@ index 000000000..e4ff7fa04
 +uae_ppc_io_mem_write64_function PPCAPI uae_ppc_io_mem_write64 = NULL;
 diff --git a/uae/qemu-uae-main.c b/uae/qemu-uae-main.c
 new file mode 100644
-index 000000000..74f68e816
+index 0000000000..74f68e8160
 --- /dev/null
 +++ b/uae/qemu-uae-main.c
 @@ -0,0 +1,167 @@
@@ -1184,7 +1184,7 @@ index 000000000..74f68e816
 +}
 diff --git a/uae/qemu-uae-slirp.c b/uae/qemu-uae-slirp.c
 new file mode 100644
-index 000000000..6c4c96701
+index 0000000000..6c4c967019
 --- /dev/null
 +++ b/uae/qemu-uae-slirp.c
 @@ -0,0 +1,79 @@
@@ -1269,7 +1269,7 @@ index 000000000..6c4c96701
 +}
 diff --git a/uae/qemu-uae.h b/uae/qemu-uae.h
 new file mode 100644
-index 000000000..dd9f53720
+index 0000000000..dd9f537203
 --- /dev/null
 +++ b/uae/qemu-uae.h
 @@ -0,0 +1,30 @@
@@ -1305,7 +1305,7 @@ index 000000000..dd9f53720
 +#endif /* QEMU_UAE_H */
 diff --git a/uae/qemu.h b/uae/qemu.h
 new file mode 100644
-index 000000000..a0afd2d0b
+index 0000000000..a0afd2d0b1
 --- /dev/null
 +++ b/uae/qemu.h
 @@ -0,0 +1,70 @@
@@ -1381,7 +1381,7 @@ index 000000000..a0afd2d0b
 +#endif /* UAE_QEMU_H */
 diff --git a/uae/types.h b/uae/types.h
 new file mode 100644
-index 000000000..b7162f249
+index 0000000000..b7162f2494
 --- /dev/null
 +++ b/uae/types.h
 @@ -0,0 +1,92 @@

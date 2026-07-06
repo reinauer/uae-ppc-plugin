@@ -1,7 +1,7 @@
-From e8fad5544da8967b6f1b9c2624afdc3d8450bb7c Mon Sep 17 00:00:00 2001
+From 33afe61e4f4695cc8b1e0692eea6830cc7173f38 Mon Sep 17 00:00:00 2001
 From: Stefan <stefan.reinauer@coreboot.org>
 Date: Sun, 18 Jan 2026 14:55:53 -0800
-Subject: [PATCH 6/7] docs: add QEMU-UAE README
+Subject: [PATCH 6/12] docs: add QEMU-UAE README
 
 Document the QEMU-UAE plugin purpose, build steps, exported API, and
 source layout.
@@ -15,7 +15,7 @@ work.
 
 diff --git a/README.md b/README.md
 new file mode 100644
-index 000000000..bb8e4f478
+index 0000000000..bb8e4f4788
 --- /dev/null
 +++ b/README.md
 @@ -0,0 +1,150 @@

@@ -1,7 +1,7 @@
 From 15d43301b7fda00026ff1b46c14c31c6f4bd06d6 Mon Sep 17 00:00:00 2001
 From: Stefan Reinauer <stefan.reinauer@coreboot.org>
 Date: Fri, 5 Jun 2026 15:10:00 -0700
-Subject: [PATCH 9/9] build: statically link Windows plugin dependencies
+Subject: [PATCH 10/12] build: statically link Windows plugin dependencies
 
 The Windows plugin is loaded from WinUAE's plugin directory. If that
 directory already contains old or wrong-architecture copies of GLib,

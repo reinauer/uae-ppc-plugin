@@ -1,7 +1,7 @@
-From 0eed2acf48ad9a1158187f7a7d94431bde1c3471 Mon Sep 17 00:00:00 2001
+From 2cf624df623902c9bc8f21b2c07b8a657000e8d3 Mon Sep 17 00:00:00 2001
 From: Stefan Reinauer <stefan.reinauer@coreboot.org>
 Date: Mon, 25 May 2026 09:24:11 -0700
-Subject: [PATCH 5/7] qemu-uae: initialize PPC system state
+Subject: [PATCH 5/12] qemu-uae: initialize PPC system state
 
 Initialize the QEMU 11.0 subsystem path before realizing the PPC CPU.
 
@@ -16,7 +16,7 @@ run past the board ROM handoff.
  2 files changed, 60 insertions(+), 8 deletions(-)
 
 diff --git a/uae/qemu-uae-cpu.c b/uae/qemu-uae-cpu.c
-index e4ff7fa04..b8db7a404 100644
+index e4ff7fa048..b8db7a4049 100644
 --- a/uae/qemu-uae-cpu.c
 +++ b/uae/qemu-uae-cpu.c
 @@ -101,6 +101,7 @@ static void qemu_uae_machine_reset(void *opaque)
@@ -36,7 +36,7 @@ index e4ff7fa04..b8db7a404 100644
      return true;
  }
 diff --git a/uae/qemu-uae-main.c b/uae/qemu-uae-main.c
-index ebe0543ad..ec76c2b38 100644
+index ebe0543adf..ec76c2b38b 100644
 --- a/uae/qemu-uae-main.c
 +++ b/uae/qemu-uae-main.c
 @@ -21,8 +21,12 @@

@@ -1,0 +1,27 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Stefan Reinauer <stefan.reinauer@coreboot.org>
+Date: Sun, 5 Jul 2026 21:10:00 -0700
+Subject: [PATCH] build: drop QEMU 11 pvg option for QEMU 9
+
+QEMU 11 has a pvg Meson feature option, but QEMU 9.2.4 does not. The
+base QEMU-UAE patch deck follows the QEMU 11 source branch, so keep this
+version-specific configure adjustment in the QEMU 9 overlay.
+---
+ configure-qemu-uae | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/configure-qemu-uae b/configure-qemu-uae
+index d5452a2721..631fe4eb4 100755
+--- a/configure-qemu-uae
++++ b/configure-qemu-uae
+@@ -43,7 +43,6 @@ EXTRA_CFLAGS="$EXTRA_CFLAGS -g -gcodeview"
+     --disable-cocoa \
+     --disable-vnc \
+     --disable-dbus-display \
+-    --disable-pvg \
+     --disable-coreaudio \
+     --audio-drv-list= \
+     --disable-auth-pam \
+-- 
+2.50.1 (Apple Git-155)
+

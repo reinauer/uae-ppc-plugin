@@ -1,7 +1,7 @@
 From 6dc5b3f4fd2d7e7cbe6170d02003e9e791b8e4d8 Mon Sep 17 00:00:00 2001
 From: Stefan Reinauer <stefan.reinauer@coreboot.org>
 Date: Fri, 5 Jun 2026 15:55:00 -0700
-Subject: [PATCH 10/10] build: link iconv for static Windows plugin
+Subject: [PATCH 11/12] build: link iconv for static Windows plugin
 
 Static MSYS2 libintl depends on libiconv. Normal QEMU executables carry
 that through the regular dependency graph, but the QEMU-UAE plugin uses a

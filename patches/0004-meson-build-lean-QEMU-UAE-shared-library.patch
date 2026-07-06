@@ -1,7 +1,7 @@
-From 0b824118a17bca81f564fcb09362658896ebdf21 Mon Sep 17 00:00:00 2001
+From a1b38c1ff68968325ba1f8d0adde40562aedcff8 Mon Sep 17 00:00:00 2001
 From: Stefan Reinauer <stefan.reinauer@coreboot.org>
 Date: Wed, 27 May 2026 21:39:07 -0700
-Subject: [PATCH 4/7] meson: build lean QEMU-UAE shared library
+Subject: [PATCH 4/12] meson: build lean QEMU-UAE shared library
 
 Add the qemu_uae Meson option and configure wrapper used to build
 QEMU as a WinUAE and FS-UAE PPC plugin shared library.
@@ -10,23 +10,23 @@ Build qemu-uae.so for the PPC target, request static PIC support,
 limit exported symbols to the host ABI, and disable unrelated tools,
 UI, audio, block, network, smartcard, RDMA, and host-library backends.
 ---
- configure-qemu-uae        | 109 ++++++++++++++++++++++++++++++++++++++
+ configure-qemu-uae        | 97 +++++++++++++++++++++++++++++++++++++++
  meson.build               | 32 +++++++++++++
  meson_options.txt         |  2 +
  uae/qemu-uae-ld64.symbols | 20 ++++++++
  uae/qemu-uae-main.c       |  2 -
  uae/qemu-uae.symbols      | 25 ++++++++++
- 6 files changed, 188 insertions(+), 2 deletions(-)
+ 6 files changed, 176 insertions(+), 2 deletions(-)
  create mode 100755 configure-qemu-uae
  create mode 100644 uae/qemu-uae-ld64.symbols
  create mode 100644 uae/qemu-uae.symbols
 
 diff --git a/configure-qemu-uae b/configure-qemu-uae
 new file mode 100755
-index 000000000..346576135
+index 0000000000..3465761358
 --- /dev/null
 +++ b/configure-qemu-uae
-@@ -0,0 +1,109 @@
+@@ -0,0 +1,97 @@
 +#!/bin/sh -e
 +#
 +# Configure script for building QEMU-UAE plugin
@@ -53,14 +53,8 @@ index 000000000..346576135
 +    ;;
 +esac
 +
-+disable_pvg=1
-+if [ -r VERSION ] && grep -Eq '^9\.' VERSION; then
-+    disable_pvg=
-+fi
-+
 +# Run meson-based configure with minimal features for UAE
-+configure_qemu_uae() {
-+    ./configure \
++./configure \
 +    --target-list=ppc-softmmu \
 +    --extra-cflags="$EXTRA_CFLAGS" \
 +    -Dqemu_uae=true \
@@ -74,6 +68,7 @@ index 000000000..346576135
 +    --disable-cocoa \
 +    --disable-vnc \
 +    --disable-dbus-display \
++    --disable-pvg \
 +    --disable-coreaudio \
 +    --audio-drv-list= \
 +    --disable-auth-pam \
@@ -129,18 +124,11 @@ index 000000000..346576135
 +    --disable-vmdk \
 +    --disable-vpc \
 +    "$@"
-+}
-+
-+if [ -n "$disable_pvg" ]; then
-+    configure_qemu_uae --disable-pvg "$@"
-+else
-+    configure_qemu_uae "$@"
-+fi
 diff --git a/meson.build b/meson.build
-index 94feda2eb..8b0145c76 100644
+index e5235d3f7b..dd90b1647a 100644
 --- a/meson.build
 +++ b/meson.build
-@@ -2446,6 +2446,7 @@ config_host_data.set('CONFIG_COCOA', cocoa.found())
+@@ -2452,6 +2452,7 @@ config_host_data.set('CONFIG_COCOA', cocoa.found())
  config_host_data.set('CONFIG_DARWIN', host_os == 'darwin')
  config_host_data.set('CONFIG_FDT', fdt.found())
  config_host_data.set('CONFIG_FUZZ', get_option('fuzzing'))
@@ -148,7 +136,7 @@ index 94feda2eb..8b0145c76 100644
  config_host_data.set('CONFIG_GCOV', get_option('b_coverage'))
  config_host_data.set('CONFIG_LIBUDEV', libudev.found())
  config_host_data.set('CONFIG_LINUX', host_os == 'linux')
-@@ -4441,6 +4442,37 @@ foreach target : target_dirs
+@@ -4447,6 +4448,37 @@ foreach target : target_dirs
        exe_name += '-unsigned'
      endif
  
@@ -187,7 +175,7 @@ index 94feda2eb..8b0145c76 100644
                 install: true,
                 c_args: c_args,
 diff --git a/meson_options.txt b/meson_options.txt
-index 31d5916cf..2a368d77f 100644
+index 31d5916cfc..2a368d77ff 100644
 --- a/meson_options.txt
 +++ b/meson_options.txt
 @@ -47,6 +47,8 @@ option('docs', type : 'feature', value : 'auto',
@@ -201,7 +189,7 @@ index 31d5916cf..2a368d77f 100644
  option('modules', type : 'feature', value : 'disabled',
 diff --git a/uae/qemu-uae-ld64.symbols b/uae/qemu-uae-ld64.symbols
 new file mode 100644
-index 000000000..4a82508d7
+index 0000000000..4a82508d71
 --- /dev/null
 +++ b/uae/qemu-uae-ld64.symbols
 @@ -0,0 +1,20 @@
@@ -226,7 +214,7 @@ index 000000000..4a82508d7
 +_uae_ppc_io_mem_write64
 +_uae_slirp_output
 diff --git a/uae/qemu-uae-main.c b/uae/qemu-uae-main.c
-index 74f68e816..ebe0543ad 100644
+index 74f68e8160..ebe0543adf 100644
 --- a/uae/qemu-uae-main.c
 +++ b/uae/qemu-uae-main.c
 @@ -108,8 +108,6 @@ static bool initialize(void)
@@ -240,7 +228,7 @@ index 74f68e816..ebe0543ad 100644
  }
 diff --git a/uae/qemu-uae.symbols b/uae/qemu-uae.symbols
 new file mode 100644
-index 000000000..c15ee3eb5
+index 0000000000..c15ee3eb5d
 --- /dev/null
 +++ b/uae/qemu-uae.symbols
 @@ -0,0 +1,25 @@
@@ -271,3 +259,4 @@ index 000000000..c15ee3eb5
 +};
 -- 
 2.50.1 (Apple Git-155)
+

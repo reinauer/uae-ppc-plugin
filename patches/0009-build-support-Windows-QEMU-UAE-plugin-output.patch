@@ -1,7 +1,7 @@
-From b02d736557b0e523a408a563ec82b35d1eae3aa2 Mon Sep 17 00:00:00 2001
+From 43c467e3b90fdb23a9e6e700e35bf2925462b302 Mon Sep 17 00:00:00 2001
 From: Stefan Reinauer <stefan.reinauer@coreboot.org>
 Date: Thu, 4 Jun 2026 13:50:17 -0700
-Subject: [PATCH 8/8] build: support Windows QEMU-UAE plugin output
+Subject: [PATCH 9/12] build: support Windows QEMU-UAE plugin output
 
 Make the QEMU-UAE configure wrapper respect an existing MSYS2
 compiler selection and prefer clang when it is available. The Windows
@@ -134,7 +134,7 @@ index 83b7a0fd72..4424a7a0eb 100644
  
  #ifdef FSUAE // NL
 diff --git a/uae/ppc.h b/uae/ppc.h
-index 2e23b00ae6..312cd445b3 100644
+index 41a085d516..0e82e5e020 100644
 --- a/uae/ppc.h
 +++ b/uae/ppc.h
 @@ -17,8 +17,10 @@
