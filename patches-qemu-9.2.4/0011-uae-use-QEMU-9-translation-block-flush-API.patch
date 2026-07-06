@@ -4,15 +4,30 @@ Date: Thu, 4 Jun 2026 23:39:56 -0700
 Subject: [PATCH] uae: use QEMU 9 translation block flush API
 
 QEMU 11 provides queue_tb_flush() for scheduling a translation block
-flush on a CPU. QEMU 9.2.4 still exposes tb_flush() for the same use
-case and handles entering an exclusive context when needed.
+flush on a CPU and tb_flush__exclusive_or_serial() for direct flushes
+inside cpu_exec_loop(). QEMU 9.2.4 still exposes tb_flush() for both
+cases and handles entering an exclusive context when needed.
 
 Use tb_flush() in the QEMU 9 overlay so the Win32 build can compile the
-UAE CPU reset path against QEMU 9.2.4.
+UAE CPU reset and JIT flush paths against QEMU 9.2.4.
 ---
- uae/qemu-uae-cpu.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ accel/tcg/cpu-exec.c | 2 +-
+ uae/qemu-uae-cpu.c   | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
+diff --git a/accel/tcg/cpu-exec.c b/accel/tcg/cpu-exec.c
+index c5307f0338..f562b36787 100644
+--- a/accel/tcg/cpu-exec.c
++++ b/accel/tcg/cpu-exec.c
+@@ -967,7 +967,7 @@ cpu_exec_loop(CPUState *cpu, SyncClocks *sc)
+ #ifdef QEMU_UAE
+             if (qatomic_xchg(&uae_ppc_flush_requested, 0)) {
+                 tlb_flush(cpu);
+-                tb_flush__exclusive_or_serial();
++                tb_flush(cpu);
+                 last_tb = NULL;
+             }
+ #endif
 diff --git a/uae/qemu-uae-cpu.c b/uae/qemu-uae-cpu.c
 index a35c1880bd..829139b475 100644
 --- a/uae/qemu-uae-cpu.c

@@ -15,10 +15,8 @@ diff --git a/accel/tcg/cpu-exec.c b/accel/tcg/cpu-exec.c
 index ad94f96b25..e7504cde4f 100644
 --- a/accel/tcg/cpu-exec.c
 +++ b/accel/tcg/cpu-exec.c
-@@ -46,6 +46,17 @@
- #include "tb-context.h"
- #include "tb-internal.h"
- #include "internal-common.h"
+@@ -49,2 +49,13 @@
+ 
 +#ifdef QEMU_UAE
 +#include "exec/cputlb.h"
 +#include "exec/tb-flush.h"
@@ -30,12 +28,8 @@ index ad94f96b25..e7504cde4f 100644
 + */
 +extern int uae_ppc_flush_requested;
 +#endif
- 
  /* -icount align implementation. */
- 
-@@ -940,6 +951,13 @@ cpu_exec_loop(CPUState *cpu, SyncClocks *sc)
-         int tb_exit = 0;
- 
+@@ -942,2 +953,9 @@ cpu_exec_loop(CPUState *cpu, SyncClocks *sc)
          while (!cpu_handle_interrupt(cpu, &last_tb)) {
 +#ifdef QEMU_UAE
 +            if (qatomic_xchg(&uae_ppc_flush_requested, 0)) {
@@ -45,8 +39,6 @@ index ad94f96b25..e7504cde4f 100644
 +            }
 +#endif
              TranslationBlock *tb;
-             TCGTBCPUState s = cpu->cc->tcg_ops->get_tb_cpu_state(cpu);
-             s.cflags = cpu->cflags_next_tb;
 diff --git a/uae/ppc.h b/uae/ppc.h
 index 2e23b00ae6..41a085d516 100644
 --- a/uae/ppc.h
@@ -128,4 +120,3 @@ index c15ee3eb5d..79016895e4 100644
      ppc_cpu_reset;
 -- 
 2.50.1 (Apple Git-155)
-
