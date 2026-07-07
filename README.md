@@ -18,9 +18,9 @@ additional patches in `patches-qemu-9.2.4/`.
 The Windows CI artifacts use WinUAE's per-architecture loader names so all
 three DLLs can be unpacked into the same plugin directory:
 
-- `qemu_uae.dll` for 32-bit WinUAE
-- `qemu_uae_x64.dll` for 64-bit WinUAE
-- `qemu_uae_arm64.dll` for ARM64 WinUAE
+- `qemu-uae.dll` for 32-bit WinUAE
+- `qemu-uae_x64.dll` for 64-bit WinUAE
+- `qemu-uae_arm64.dll` for ARM64 WinUAE
 
 ## Requirements
 

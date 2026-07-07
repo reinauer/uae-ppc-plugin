@@ -29,7 +29,7 @@ jobs:
             package_prefix: mingw-w64-i686
             host_cpu: i386
             artifact: qemu-uae-windows-32bit
-            dll_name: qemu_uae.dll
+            dll_name: qemu-uae.dll
             qemu_version: 9.2.4
             qemu_sha256: f3cc1c4eabfdb288218ac3e33763dbe9e276d8bc890b867a2335d58de2ddd39a
             extra_patch_dir: patches-qemu-9.2.4
@@ -40,7 +40,7 @@ jobs:
             package_prefix: mingw-w64-clang-x86_64
             host_cpu: x86_64
             artifact: qemu-uae-windows-64bit
-            dll_name: qemu_uae_x64.dll
+            dll_name: qemu-uae_x64.dll
             qemu_version: 11.0.1
             qemu_sha256: 0d235f5820278d914a3155ec27af8e4258d697ea892895570807d69c0cb8cd64
             extra_patch_dir: ""
@@ -51,7 +51,7 @@ jobs:
             package_prefix: mingw-w64-clang-aarch64
             host_cpu: aarch64
             artifact: qemu-uae-windows-arm64
-            dll_name: qemu_uae_arm64.dll
+            dll_name: qemu-uae_arm64.dll
             qemu_version: 11.0.1
             qemu_sha256: 0d235f5820278d914a3155ec27af8e4258d697ea892895570807d69c0cb8cd64
             extra_patch_dir: ""
