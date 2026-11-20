@@ -3,7 +3,8 @@
 This repository contains the patch deck and helper script used to build the
 QEMU-UAE PowerPC plugin for UAE-based Amiga emulators.
 
-The original repository is <https://github.com/reinauer/qemu-uae>.
+The source branch for the QEMU-UAE patch deck is
+[`qemu-v11.0.1-uae` in `reinauer/qemu`](https://github.com/reinauer/qemu/tree/qemu-v11.0.1-uae).
 
 The helper downloads the upstream QEMU source archive, verifies its SHA-256
 checksum, applies the ordered patches from `patches/`, and builds
