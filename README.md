@@ -96,3 +96,17 @@ Patches apply with zero fuzz. A complete deck is checked in reverse order
 on temporary copies to recognize an already-patched source tree. If a
 partial or locally modified tree cannot be replayed, use a separate work
 directory or `--clean` (which removes the selected source directory).
+
+## Optional Linux optimization
+
+Linux builds can opt into LTO and `-fno-semantic-interposition`:
+
+```sh
+QEMU_UAE_LINUX_LTO=1 ./build-qemu-uae-plugin.sh --work-dir build-lto -j8
+```
+
+This is experimental and remains off by default. It needs a compatible
+compiler/linker and makes internal symbol interposition unavailable. It
+retains the normal hardening flags. Measure a representative PPC workload
+before adopting it; a successful build is not evidence of a speedup.
+macOS and Windows reject this option.

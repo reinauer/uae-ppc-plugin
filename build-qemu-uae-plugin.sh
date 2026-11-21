@@ -101,6 +101,7 @@ Environment:
   QEMU_UAE_OUTPUT_PDB   Output path for qemu-uae.pdb. Defaults next to the plugin.
   QEMU_UAE_DEPS_PREFIX  Prefix containing glib-2.0 and slirp pkg-config files.
   QEMU_UAE_NINJA        Ninja executable. Defaults to ninja in PATH.
+  QEMU_UAE_LINUX_LTO    Set to 1 to try Linux LTO and local symbol binding.
   MACOSX_DEPLOYMENT_TARGET or WINUAE_MACOS_DEPLOYMENT_TARGET
                          macOS deployment target. Default on Darwin: 13.0.
 EOF
@@ -175,6 +176,15 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+case "${QEMU_UAE_LINUX_LTO:-0}" in
+    0) ;;
+    1)
+        [[ "$(uname -s)" == "Linux" ]] || die "QEMU_UAE_LINUX_LTO requires Linux"
+        configure_args=(--enable-lto --extra-cflags=-fno-semantic-interposition
+                        ${configure_args[@]+"${configure_args[@]}"})
+        ;;
+    *) die "QEMU_UAE_LINUX_LTO must be 0 or 1" ;;
+esac
 
 patch_files=()
 if [[ -n "${patch_file}" ]]; then
