@@ -1,7 +1,7 @@
-From a1b38c1ff68968325ba1f8d0adde40562aedcff8 Mon Sep 17 00:00:00 2001
+From 2294851dcc5bbdac04748e2daf249a7629aeab67 Mon Sep 17 00:00:00 2001
 From: Stefan Reinauer <stefan.reinauer@coreboot.org>
 Date: Wed, 27 May 2026 21:39:07 -0700
-Subject: [PATCH 4/12] meson: build lean QEMU-UAE shared library
+Subject: [PATCH 04/15] meson: build lean QEMU-UAE shared library
 
 Add the qemu_uae Meson option and configure wrapper used to build
 QEMU as a WinUAE and FS-UAE PPC plugin shared library.
@@ -125,10 +125,10 @@ index 0000000000..3465761358
 +    --disable-vpc \
 +    "$@"
 diff --git a/meson.build b/meson.build
-index e5235d3f7b..dd90b1647a 100644
+index f6a6b61467..0c53ef60b4 100644
 --- a/meson.build
 +++ b/meson.build
-@@ -2452,6 +2452,7 @@ config_host_data.set('CONFIG_COCOA', cocoa.found())
+@@ -2438,6 +2438,7 @@ config_host_data.set('CONFIG_COCOA', cocoa.found())
  config_host_data.set('CONFIG_DARWIN', host_os == 'darwin')
  config_host_data.set('CONFIG_FDT', fdt.found())
  config_host_data.set('CONFIG_FUZZ', get_option('fuzzing'))
@@ -136,7 +136,7 @@ index e5235d3f7b..dd90b1647a 100644
  config_host_data.set('CONFIG_GCOV', get_option('b_coverage'))
  config_host_data.set('CONFIG_LIBUDEV', libudev.found())
  config_host_data.set('CONFIG_LINUX', host_os == 'linux')
-@@ -4447,6 +4448,37 @@ foreach target : target_dirs
+@@ -4448,6 +4449,37 @@ foreach target : target_dirs
        exe_name += '-unsigned'
      endif
  
@@ -175,7 +175,7 @@ index e5235d3f7b..dd90b1647a 100644
                 install: true,
                 c_args: c_args,
 diff --git a/meson_options.txt b/meson_options.txt
-index 31d5916cfc..2a368d77ff 100644
+index a07cb47d35..790264022c 100644
 --- a/meson_options.txt
 +++ b/meson_options.txt
 @@ -47,6 +47,8 @@ option('docs', type : 'feature', value : 'auto',
@@ -257,6 +257,3 @@ index 0000000000..c15ee3eb5d
 +  local:
 +    *;
 +};
--- 
-2.50.1 (Apple Git-155)
-

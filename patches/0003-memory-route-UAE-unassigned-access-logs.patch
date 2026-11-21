@@ -1,7 +1,7 @@
-From 243789c1475dbd3bf4f4c9bb9eb19b5d81ab4b58 Mon Sep 17 00:00:00 2001
+From 44e4922c690189fbf253943b3dcc875a899b968f Mon Sep 17 00:00:00 2001
 From: Stefan <stefan.reinauer@coreboot.org>
 Date: Sat, 17 Jan 2026 16:56:40 -0800
-Subject: [PATCH 3/12] memory: route UAE unassigned access logs
+Subject: [PATCH 03/15] memory: route UAE unassigned access logs
 
 When QEMU_UAE and DEBUG_UNASSIGNED are enabled, send unassigned
 memory access messages through uae_log() instead of printf().
@@ -13,7 +13,7 @@ logging path.
  1 file changed, 12 insertions(+)
 
 diff --git a/system/memory.c b/system/memory.c
-index 56f3225b21..bbe8b820c6 100644
+index 5fc36708ec..eccbd62c4c 100644
 --- a/system/memory.c
 +++ b/system/memory.c
 @@ -38,6 +38,10 @@
@@ -27,7 +27,7 @@ index 56f3225b21..bbe8b820c6 100644
  //#define DEBUG_UNASSIGNED
  
  static unsigned memory_region_transaction_depth;
-@@ -1336,7 +1340,11 @@ static uint64_t unassigned_mem_read(void *opaque, hwaddr addr,
+@@ -1339,7 +1343,11 @@ static uint64_t unassigned_mem_read(void *opaque, hwaddr addr,
                                      unsigned size)
  {
  #ifdef DEBUG_UNASSIGNED
@@ -39,7 +39,7 @@ index 56f3225b21..bbe8b820c6 100644
  #endif
      return 0;
  }
-@@ -1345,8 +1353,12 @@ static void unassigned_mem_write(void *opaque, hwaddr addr,
+@@ -1348,8 +1356,12 @@ static void unassigned_mem_write(void *opaque, hwaddr addr,
                                   uint64_t val, unsigned size)
  {
  #ifdef DEBUG_UNASSIGNED
@@ -52,6 +52,3 @@ index 56f3225b21..bbe8b820c6 100644
  }
  
  static bool unassigned_mem_accepts(void *opaque, hwaddr addr,
--- 
-2.50.1 (Apple Git-155)
-

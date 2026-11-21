@@ -13,14 +13,11 @@ random bytes during subsystem startup. Select QEMU's rng-none backend for
 the QEMU 9 overlay so qcrypto_init() does not open the Windows crypto
 provider just to bring up the Win32 plugin.
 ---
- configure-qemu-uae | 1 +
- 1 file changed, 1 insertion(+)
 
 diff --git a/configure-qemu-uae b/configure-qemu-uae
-index 591df4296c..d5452a2721 100755
 --- a/configure-qemu-uae
 +++ b/configure-qemu-uae
-@@ -46,6 +46,7 @@ configure_qemu_uae() {
+@@ -56,6 +56,7 @@
      --extra-cflags="$EXTRA_CFLAGS" \
      -Dqemu_uae=true \
      -Db_staticpic=true \
@@ -28,6 +25,3 @@ index 591df4296c..d5452a2721 100755
      --disable-werror \
      --disable-strip \
      --disable-tools \
--- 
-2.49.0
-

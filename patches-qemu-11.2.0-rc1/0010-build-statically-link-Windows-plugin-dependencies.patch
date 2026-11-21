@@ -1,7 +1,7 @@
-From 15d43301b7fda00026ff1b46c14c31c6f4bd06d6 Mon Sep 17 00:00:00 2001
+From 3e7283f280dc042c68de6dce4c92bea15e1675b2 Mon Sep 17 00:00:00 2001
 From: Stefan Reinauer <stefan.reinauer@coreboot.org>
 Date: Fri, 5 Jun 2026 15:10:00 -0700
-Subject: [PATCH 10/12] build: statically link Windows plugin dependencies
+Subject: [PATCH 10/15] build: statically link Windows plugin dependencies
 
 The Windows plugin is loaded from WinUAE's plugin directory. If that
 directory already contains old or wrong-architecture copies of GLib,
@@ -16,10 +16,10 @@ a single DLL.
  1 file changed, 2 insertions(+)
 
 diff --git a/configure-qemu-uae b/configure-qemu-uae
-index ad9212c452..591df4296c 100755
+index ad9212c452..b073ceabc6 100755
 --- a/configure-qemu-uae
 +++ b/configure-qemu-uae
-@@ -29,6 +29,8 @@ MINGW*|MSYS*|CLANG*|UCRT*)
+@@ -30,6 +30,8 @@ MINGW*|MSYS*|CLANG*|UCRT*)
              export CXX=g++
          fi
      fi
@@ -28,6 +28,3 @@ index ad9212c452..591df4296c 100755
      ;;
  *)
      EXTRA_CFLAGS="$EXTRA_CFLAGS -fPIC"
--- 
-2.49.0
-

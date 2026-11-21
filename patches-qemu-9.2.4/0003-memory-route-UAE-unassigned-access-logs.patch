@@ -1,0 +1,51 @@
+From 243789c1475dbd3bf4f4c9bb9eb19b5d81ab4b58 Mon Sep 17 00:00:00 2001
+From: Stefan <stefan.reinauer@coreboot.org>
+Date: Sat, 17 Jan 2026 16:56:40 -0800
+Subject: [PATCH 3/12] memory: route UAE unassigned access logs
+
+When QEMU_UAE and DEBUG_UNASSIGNED are enabled, send unassigned
+memory access messages through uae_log() instead of printf().
+
+This lets the host emulator capture the diagnostics with its normal
+logging path.
+---
+
+diff --git a/system/memory.c b/system/memory.c
+--- a/system/memory.c
++++ b/system/memory.c
+@@ -34,6 +34,10 @@
+ #include "hw/boards.h"
+ #include "migration/vmstate.h"
+ #include "exec/address-spaces.h"
++
++#ifdef QEMU_UAE
++#include "uae/log.h"
++#endif
+ 
+ //#define DEBUG_UNASSIGNED
+ 
+@@ -1342,8 +1346,12 @@
+                                     unsigned size)
+ {
+ #ifdef DEBUG_UNASSIGNED
++#ifdef QEMU_UAE
++    uae_log("Unassigned mem read " HWADDR_FMT_plx "\n", addr);
++#else
+     printf("Unassigned mem read " HWADDR_FMT_plx "\n", addr);
+ #endif
++#endif
+     return 0;
+ }
+ 
+@@ -1351,7 +1359,11 @@
+                                  uint64_t val, unsigned size)
+ {
+ #ifdef DEBUG_UNASSIGNED
++#ifdef QEMU_UAE
++    uae_log("Unassigned mem write " HWADDR_FMT_plx " = 0x%"PRIx64"\n", addr, val);
++#else
+     printf("Unassigned mem write " HWADDR_FMT_plx " = 0x%"PRIx64"\n", addr, val);
++#endif
+ #endif
+ }
+ 

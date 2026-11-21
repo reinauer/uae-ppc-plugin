@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-qemu_version="${QEMU_UAE_QEMU_VERSION:-11.0.1}"
+qemu_version="${QEMU_UAE_QEMU_VERSION:-11.1.3}"
 qemu_archive="qemu-${qemu_version}.tar.xz"
 qemu_url_default="https://download.qemu.org/${qemu_archive}"
 
@@ -12,6 +12,12 @@ case "${qemu_version}" in
     11.0.1)
         qemu_sha256_default="0d235f5820278d914a3155ec27af8e4258d697ea892895570807d69c0cb8cd64"
         ;;
+    11.1.3)
+        qemu_sha256_default="5a8289c7940dc77d3873c81a6c29ba3afe1446fc9d36e77fa1658cdbecb84b22"
+        ;;
+    11.2.0-rc1)
+        qemu_sha256_default="afa61391ade2f05f0b93a7510d736d22e54f74b91fd2c47d286640d595343870"
+        ;;
     *)
         qemu_sha256_default=""
         ;;
@@ -19,7 +25,13 @@ esac
 qemu_sha256="${QEMU_UAE_QEMU_SHA256:-${qemu_sha256_default}}"
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-patch_dir="${QEMU_UAE_PATCH_DIR:-${script_dir}/patches}"
+case "${qemu_version}" in
+    9.2.4) patch_dir_default="${script_dir}/patches-qemu-9.2.4" ;;
+    11.0.1) patch_dir_default="${script_dir}/patches-qemu-11.0.1" ;;
+    11.2.0-rc1) patch_dir_default="${script_dir}/patches-qemu-11.2.0-rc1" ;;
+    *) patch_dir_default="${script_dir}/patches" ;;
+esac
+patch_dir="${QEMU_UAE_PATCH_DIR:-${patch_dir_default}}"
 extra_patch_dir="${QEMU_UAE_EXTRA_PATCH_DIR:-}"
 patch_file="${QEMU_UAE_PATCH:-}"
 work_dir="${QEMU_UAE_WORK_DIR:-${script_dir}/build}"
@@ -71,7 +83,7 @@ Options:
   --url URL            Download URL. Default: ${qemu_url_default}
   --output FILE        Copy the built plugin to FILE.
   --patch-dir DIR      Directory containing ordered *.patch files.
-  -j, --jobs N         Ninja parallelism.
+  -jN, -j, --jobs N    Ninja parallelism.
   --clean              Remove the source directory before extracting.
   --no-verify          Skip tarball SHA-256 verification.
   -h, --help           Show this help.
@@ -82,7 +94,7 @@ Environment:
   QEMU_UAE_EXTRA_PATCH_DIR
                        Optional ordered *.patch directory applied after
                        QEMU_UAE_PATCH_DIR.
-  QEMU_UAE_QEMU_VERSION QEMU version to download. Default: 11.0.1.
+  QEMU_UAE_QEMU_VERSION QEMU version to download. Default: 11.1.3.
   QEMU_UAE_QEMU_SHA256 Expected QEMU archive SHA-256.
   QEMU_UAE_PLUGIN_NAME  Built plugin file name. Defaults to host suffix.
   QEMU_UAE_PDB          Generate Windows PDB symbols when supported by clang/lld.
@@ -136,6 +148,10 @@ while [[ $# -gt 0 ]]; do
             jobs="$2"
             shift 2
             ;;
+        -j[0-9]*)
+            jobs="${1#-j}"
+            shift
+            ;;
         --clean)
             clean=1
             shift
@@ -158,6 +174,7 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
 
 patch_files=()
 if [[ -n "${patch_file}" ]]; then
@@ -284,19 +301,53 @@ apply_qemu_patch_file() {
     local patch_file="$1"
     local patch_name
     patch_name="$(basename "${patch_file}")"
+    local forward_output
+    local reverse_output
+    forward_output="$(mktemp)"
+    reverse_output="$(mktemp)"
 
-    if (cd "${source_dir}" && patch -p1 --dry-run -f < "${patch_file}" >/dev/null); then
+    if (cd "${source_dir}" && patch -p1 --fuzz=0 --dry-run -f < "${patch_file}" >"${forward_output}" 2>&1); then
+        rm -f "${forward_output}" "${reverse_output}"
         echo "applying ${patch_name}"
-        (cd "${source_dir}" && patch -p1 -f < "${patch_file}")
-    elif (cd "${source_dir}" && patch -p1 -R --dry-run -f < "${patch_file}" >/dev/null); then
+        (cd "${source_dir}" && patch -p1 --fuzz=0 -f < "${patch_file}")
+    elif (cd "${source_dir}" && patch -p1 -R --fuzz=0 --dry-run -f < "${patch_file}" >"${reverse_output}" 2>&1); then
+        rm -f "${forward_output}" "${reverse_output}"
         echo "${patch_name} already applied"
     else
+        echo "${patch_name} forward dry-run failed:" >&2
+        cat "${forward_output}" >&2
+        echo "${patch_name} reverse dry-run failed:" >&2
+        cat "${reverse_output}" >&2
+        rm -f "${forward_output}" "${reverse_output}"
         die "${patch_name} does not apply cleanly to ${source_dir}"
     fi
 }
 
 apply_qemu_patches() {
     local patch_file
+    local check_dir path i
+
+    # Later patches can change files created by earlier ones. Check the
+    # complete deck in reverse order on copies, not one patch at a time.
+    mkdir -p "${work_dir}"
+    check_dir="$(mktemp -d "${work_dir}/patch-check.XXXXXX")"
+    while IFS= read -r path; do
+        if [[ -f "${source_dir}/${path}" ]]; then
+            mkdir -p "${check_dir}/$(dirname "${path}")"
+            cp "${source_dir}/${path}" "${check_dir}/${path}"
+        fi
+    done < <(awk '/^(--- a\/|\+\+\+ b\/)/ { print substr($2, 3) }' "${patch_files[@]}" | sort -u)
+    for ((i=${#patch_files[@]}-1; i>=0; i--)); do
+        if ! (cd "${check_dir}" && patch -p1 -R --fuzz=0 -f < "${patch_files[i]}" >/dev/null 2>&1); then
+            break
+        fi
+    done
+    rm -rf "${check_dir}"
+    if [[ "${i}" == "-1" ]]; then
+        echo "QEMU-UAE patch deck already applied"
+        chmod +x "${source_dir}/configure-qemu-uae"
+        return
+    fi
 
     for patch_file in "${patch_files[@]}"; do
         apply_qemu_patch_file "${patch_file}"

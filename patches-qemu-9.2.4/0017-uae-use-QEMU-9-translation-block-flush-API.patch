@@ -11,15 +11,11 @@ cases and handles entering an exclusive context when needed.
 Use tb_flush() in the QEMU 9 overlay so the Win32 build can compile the
 UAE CPU reset and JIT flush paths against QEMU 9.2.4.
 ---
- accel/tcg/cpu-exec.c | 2 +-
- uae/qemu-uae-cpu.c   | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/accel/tcg/cpu-exec.c b/accel/tcg/cpu-exec.c
-index c5307f0338..f562b36787 100644
 --- a/accel/tcg/cpu-exec.c
 +++ b/accel/tcg/cpu-exec.c
-@@ -967,7 +967,7 @@ cpu_exec_loop(CPUState *cpu, SyncClocks *sc)
+@@ -973,7 +973,7 @@
  #ifdef QEMU_UAE
              if (qatomic_xchg(&uae_ppc_flush_requested, 0)) {
                  tlb_flush(cpu);
@@ -29,10 +25,9 @@ index c5307f0338..f562b36787 100644
              }
  #endif
 diff --git a/uae/qemu-uae-cpu.c b/uae/qemu-uae-cpu.c
-index a35c1880bd..829139b475 100644
 --- a/uae/qemu-uae-cpu.c
 +++ b/uae/qemu-uae-cpu.c
-@@ -367,7 +367,7 @@ void PPCAPI ppc_cpu_reset(void)
+@@ -406,7 +406,7 @@
      uae_log("QEMU: NIP = 0x%08x\n", state.env->nip);
  
      uae_log("QEMU: Flushing all JIT translation blocks\n");
@@ -40,4 +35,4 @@ index a35c1880bd..829139b475 100644
 +    tb_flush(CPU(state.cpu));
  }
  
- static void qemu_uae_log_cpu_state(void)
+ void PPCAPI ppc_cpu_flush_jit(void)

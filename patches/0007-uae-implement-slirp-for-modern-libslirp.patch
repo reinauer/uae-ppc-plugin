@@ -1,7 +1,7 @@
-From d50fece470fff316553b8c1feffe795ac4a78bb6 Mon Sep 17 00:00:00 2001
+From d252fa5721b7ffc2f554abfa6f961f5fd2f7377a Mon Sep 17 00:00:00 2001
 From: Stefan Reinauer <stefan.reinauer@coreboot.org>
 Date: Wed, 27 May 2026 21:46:12 -0700
-Subject: [PATCH 7/12] uae: implement slirp for modern libslirp
+Subject: [PATCH 07/15] uae: implement slirp for modern libslirp
 
 Replace the slirp stub with a bridge for modern libslirp releases.
 
@@ -354,6 +354,3 @@ index 6c4c967019..3a6f0a1761 100644
 -    }
 -    uae_slirp_output(pkt, pkt_len);
 -}
--- 
-2.50.1 (Apple Git-155)
-

@@ -11,14 +11,11 @@ Use container_get() so the Win32 QEMU 9.2.4 build can use the same
 machine setup logic without adding duplicate containers that QEMU 9's
 machine_initfn() already created.
 ---
- uae/qemu-uae-main.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
 
 diff --git a/uae/qemu-uae-main.c b/uae/qemu-uae-main.c
-index 8520ba3f59..527817ae1c 100644
 --- a/uae/qemu-uae-main.c
 +++ b/uae/qemu-uae-main.c
-@@ -74,6 +74,13 @@ static struct {
+@@ -63,6 +63,13 @@
      bool exit_main_loop;
  } state;
  
@@ -32,7 +29,7 @@ index 8520ba3f59..527817ae1c 100644
  static bool qemu_uae_create_machine(void)
  {
      static const char *const containers[] = {
-@@ -100,8 +107,7 @@ static bool qemu_uae_create_machine(void)
+@@ -89,8 +96,7 @@
      object_property_add_child(object_get_root(), "machine",
                                OBJECT(current_machine));
      for (int i = 0; i < G_N_ELEMENTS(containers); i++) {

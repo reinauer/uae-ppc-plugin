@@ -1,0 +1,117 @@
+From 86eb37c7b75b2a5b7ef9026c4af8f61d8b646e4f Mon Sep 17 00:00:00 2001
+From: Dimitris Panokostas <midwan@gmail.com>
+Date: Wed, 1 Jul 2026 22:29:19 +0200
+Subject: [PATCH 8/12] ppc: flush UAE JIT after 68k code changes
+
+---
+
+diff --git a/accel/tcg/cpu-exec.c b/accel/tcg/cpu-exec.c
+--- a/accel/tcg/cpu-exec.c
++++ b/accel/tcg/cpu-exec.c
+@@ -42,6 +42,17 @@
+ #include "internal-common.h"
+ #include "internal-target.h"
+ 
++#ifdef QEMU_UAE
++#include "exec/cputlb.h"
++#include "exec/tb-flush.h"
++
++/*
++ * Set by ppc_cpu_flush_jit() when the UAE m68k thread has patched PPC code or
++ * page tables directly in shared RAM. Consume it from the PPC vCPU between TBs,
++ * where QEMU can legally run a synchronous TLB/TB flush.
++ */
++extern int uae_ppc_flush_requested;
++#endif
+ /* -icount align implementation. */
+ 
+ typedef struct SyncClocks {
+@@ -959,6 +970,13 @@
+         int tb_exit = 0;
+ 
+         while (!cpu_handle_interrupt(cpu, &last_tb)) {
++#ifdef QEMU_UAE
++            if (qatomic_xchg(&uae_ppc_flush_requested, 0)) {
++                tlb_flush(cpu);
++                tb_flush__exclusive_or_serial();
++                last_tb = NULL;
++            }
++#endif
+             TranslationBlock *tb;
+             vaddr pc;
+             uint64_t cs_base;
+diff --git a/uae/ppc.h b/uae/ppc.h
+--- a/uae/ppc.h
++++ b/uae/ppc.h
+@@ -116,6 +116,7 @@
+ void PPCCALL ppc_cpu_do_dec(int value);
+ void PPCCALL ppc_cpu_pause(int pause);
+ void PPCCALL ppc_cpu_reset(void);
++void PPCCALL ppc_cpu_flush_jit(void);
+ 
+ #define PPC_CPU_STATE_RUNNING 1
+ #define PPC_CPU_STATE_PAUSED 2
+diff --git a/uae/qemu-uae-cpu.c b/uae/qemu-uae-cpu.c
+--- a/uae/qemu-uae-cpu.c
++++ b/uae/qemu-uae-cpu.c
+@@ -20,6 +20,7 @@
+ #include "qemu/osdep.h"
+ #include "qemu/log.h"
+ #include "qemu/module.h"
++#include "qemu/atomic.h"
+ #include "qapi/error.h"
+ #include "hw/ppc/ppc.h"
+ #include "hw/core/boards.h"
+@@ -51,6 +52,13 @@
+     QemuThread pause_thread;
+     uint32_t hid1;
+ } state;
++
++/*
++ * Set by UAE from the m68k thread when OS3.x/WarpOS has patched PPC code or
++ * page tables directly in shared RAM. It is consumed by the PPC vCPU thread at
++ * a cpu_exec() safe point before looking up the next TB.
++ */
++int uae_ppc_flush_requested;
+ 
+ static uint64_t indirect_read(void *opaque, hwaddr addr, unsigned size)
+ {
+@@ -370,6 +378,20 @@
+     queue_tb_flush(CPU(state.cpu));
+ }
+ 
++void PPCAPI ppc_cpu_flush_jit(void)
++{
++    qatomic_set(&uae_ppc_flush_requested, 1);
++
++    /*
++     * Direct-chained TBs can keep running generated code without returning to
++     * cpu_exec_loop(). Kick the PPC vCPU so the pending flush is consumed at
++     * the next TB boundary.
++     */
++    if (state.cpu) {
++        cpu_exit(CPU(state.cpu));
++    }
++}
++
+ static void qemu_uae_log_cpu_state(void)
+ {
+     int flags = 0;
+diff --git a/uae/qemu-uae-ld64.symbols b/uae/qemu-uae-ld64.symbols
+--- a/uae/qemu-uae-ld64.symbols
++++ b/uae/qemu-uae-ld64.symbols
+@@ -1,3 +1,4 @@
++_ppc_cpu_flush_jit
+ _ppc_cpu_init
+ _ppc_cpu_map_memory
+ _ppc_cpu_reset
+diff --git a/uae/qemu-uae.symbols b/uae/qemu-uae.symbols
+--- a/uae/qemu-uae.symbols
++++ b/uae/qemu-uae.symbols
+@@ -1,5 +1,6 @@
+ {
+   global:
++    ppc_cpu_flush_jit;
+     ppc_cpu_init;
+     ppc_cpu_map_memory;
+     ppc_cpu_reset;

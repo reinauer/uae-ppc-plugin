@@ -1,7 +1,7 @@
-From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From d0f06c4c317436883e0d965e7bd9fff28aa7ee3b Mon Sep 17 00:00:00 2001
 From: Stefan Reinauer <stefan.reinauer@coreboot.org>
 Date: Mon, 6 Jul 2026 20:30:00 -0700
-Subject: [PATCH 13/13] uae: re-arm vCPU pause requests
+Subject: [PATCH 13/15] uae: re-arm vCPU pause requests
 
 pause_all_vcpus() issues the stop request once and then waits on
 qemu_pause_cond without a timeout; the retry loop only re-kicks the
@@ -21,10 +21,11 @@ thread keeps the stock pause_all_vcpus() semantics. Also log after the
 BQL is acquired so the two possible blocking points (lock acquisition
 vs pause wait) are distinguishable in user logs.
 ---
+ uae/qemu-uae-cpu.c | 57 +++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 56 insertions(+), 1 deletion(-)
 
- uae/qemu-uae-cpu.c | 58 ++++++++++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 56 insertions(+), 2 deletions(-)
-
+diff --git a/uae/qemu-uae-cpu.c b/uae/qemu-uae-cpu.c
+index 4245574475..0d9764a0ac 100644
 --- a/uae/qemu-uae-cpu.c
 +++ b/uae/qemu-uae-cpu.c
 @@ -21,6 +21,7 @@
@@ -35,7 +36,7 @@ vs pause wait) are distinguishable in user logs.
  #include "qapi/error.h"
  #include "hw/ppc/ppc.h"
  #include "hw/core/boards.h"
-@@ -399,12 +400,66 @@
+@@ -399,12 +400,66 @@ static void qemu_uae_log_cpu_state(void)
      cpu_dump_state(CPU(state.cpu), stderr, flags);
  }
  
@@ -103,5 +104,3 @@ vs pause wait) are distinguishable in user logs.
          state.cpu_state = PPC_CPU_STATE_PAUSED;
          uae_log("QEMU: Paused!\n");
          qemu_uae_log_cpu_state();
--- 
-2.39.0

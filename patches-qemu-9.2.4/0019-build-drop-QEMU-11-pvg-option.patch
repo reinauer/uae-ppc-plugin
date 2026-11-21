@@ -7,14 +7,11 @@ QEMU 11 has a pvg Meson feature option, but QEMU 9.2.4 does not. The
 base QEMU-UAE patch deck follows the QEMU 11 source branch, so keep this
 version-specific configure adjustment in the QEMU 9 overlay.
 ---
- configure-qemu-uae | 1 -
- 1 file changed, 1 deletion(-)
 
 diff --git a/configure-qemu-uae b/configure-qemu-uae
-index d5452a2721..631fe4eb4 100755
 --- a/configure-qemu-uae
 +++ b/configure-qemu-uae
-@@ -43,7 +43,6 @@ EXTRA_CFLAGS="$EXTRA_CFLAGS -g -gcodeview"
+@@ -66,7 +66,6 @@
      --disable-cocoa \
      --disable-vnc \
      --disable-dbus-display \
@@ -22,6 +19,3 @@ index d5452a2721..631fe4eb4 100755
      --disable-coreaudio \
      --audio-drv-list= \
      --disable-auth-pam \
--- 
-2.50.1 (Apple Git-155)
-

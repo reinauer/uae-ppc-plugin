@@ -1,0 +1,65 @@
+From 2e68cc8a54cff40f71a57b94f23f6c96eecf4e84 Mon Sep 17 00:00:00 2001
+From: Stefan Reinauer <stefan.reinauer@coreboot.org>
+Date: Fri, 20 Nov 2026 16:33:53 -0800
+Subject: [PATCH 15/15] uae: adapt plugin startup to QEMU 11.1
+
+Register target information before QOM types and initialize machine
+memory through the replacement API. Drop the removed Gluster option
+from the plugin configure wrapper.
+
+Based on the QEMU 11.1 update in BlitterStudio/amiberry-qemu-uae.
+---
+ configure-qemu-uae  | 1 -
+ uae/qemu-uae-main.c | 7 ++++++-
+ 2 files changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/configure-qemu-uae b/configure-qemu-uae
+index 86cc6915a7..ce4e6a6b44 100755
+--- a/configure-qemu-uae
++++ b/configure-qemu-uae
+@@ -103,7 +103,6 @@ esac
+     --disable-guest-agent \
+     --disable-linux-aio \
+     --disable-seccomp \
+-    --disable-glusterfs \
+     --disable-capstone \
+     --disable-numa \
+     --disable-rdma \
+diff --git a/uae/qemu-uae-main.c b/uae/qemu-uae-main.c
+index ec76c2b38b..554960d60e 100644
+--- a/uae/qemu-uae-main.c
++++ b/uae/qemu-uae-main.c
+@@ -21,12 +21,14 @@
+ #include "qemu/log.h"
+ #include "qemu/module.h"
+ #include "qemu/main-loop.h"
++#include "qemu/target-info-qom.h"
+ #include "qemu/accel.h"
+ #include "qemu-version.h"
+ #include "qapi/error.h"
+ #include "qom/object.h"
+ #include "exec/cpu-common.h"
+ #include "hw/core/boards.h"
++#include "system/memory-internal.h"
+ #include "system/system.h"
+ #include "system/cpus.h"
+ #include "system/runstate.h"
+@@ -92,7 +94,7 @@ static bool qemu_uae_create_machine(void)
+         object_property_add_new_container(OBJECT(current_machine),
+                                           containers[i]);
+     }
+-    cpu_exec_init_all();
++    machine_memory_init();
+ 
+     accel_class = accel_find("tcg");
+     if (!accel_class) {
+@@ -140,6 +142,9 @@ static bool initialize(void)
+     uae_log("QEMU: Initialize QEMU-UAE (QEMU %s + API %d.%d.%d)\n",
+             QEMU_FULL_VERSION, major, minor, revision);
+ 
++    /* Set target information before registering target-dependent QOM types. */
++    module_call_init(MODULE_INIT_TARGET_INFO);
++    target_info_qom_set_target();
+     uae_log("QEMU: qemu_init_subsystems\n");
+     qemu_init_subsystems();
+ 

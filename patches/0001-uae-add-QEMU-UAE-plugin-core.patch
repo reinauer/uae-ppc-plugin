@@ -1,7 +1,7 @@
-From 223f01bbe720eb43b7272931d9ae74777457dc83 Mon Sep 17 00:00:00 2001
+From 71de20b5009253209fd4f64b500cb96076e1373a Mon Sep 17 00:00:00 2001
 From: Stefan Reinauer <stefan.reinauer@coreboot.org>
 Date: Wed, 27 May 2026 21:37:19 -0700
-Subject: [PATCH 1/12] uae: add QEMU-UAE plugin core
+Subject: [PATCH 01/15] uae: add QEMU-UAE plugin core
 
 Add the QEMU-UAE headers, PPC CPU shim, startup path, slirp stubs,
 and internal helper declarations needed by the plugin tree.
@@ -39,10 +39,10 @@ CPU execution and drive the exported main loop.
  create mode 100644 uae/types.h
 
 diff --git a/meson.build b/meson.build
-index 51f5f2851a..e5235d3f7b 100644
+index 40e3f4ec44..f6a6b61467 100644
 --- a/meson.build
 +++ b/meson.build
-@@ -3852,6 +3852,7 @@ user_ss.add(files('cpu-target.c'))
+@@ -3846,6 +3846,7 @@ user_ss.add(files('cpu-target.c'))
  system_ss.add(files('cpu-target.c'))
  
  subdir('system')
@@ -51,10 +51,10 @@ index 51f5f2851a..e5235d3f7b 100644
  # Work around a gcc bug/misfeature wherein constant propagation looks
  # through an alias:
 diff --git a/system/cpus.c b/system/cpus.c
-index bded87feb1..99b970ade0 100644
+index 97e5a5edee..8830651e7a 100644
 --- a/system/cpus.c
 +++ b/system/cpus.c
-@@ -48,6 +48,10 @@
+@@ -50,6 +50,10 @@
  #include "hw/core/hw-error.h"
  #include "trace.h"
  
@@ -65,7 +65,7 @@ index bded87feb1..99b970ade0 100644
  #ifdef CONFIG_LINUX
  
  #include <sys/prctl.h>
-@@ -590,6 +594,66 @@ void qemu_cond_wait_bql(QemuCond *cond)
+@@ -592,6 +596,66 @@ void qemu_cond_wait_bql(QemuCond *cond)
      qemu_cond_wait(cond, &bql);
  }
  
@@ -133,11 +133,11 @@ index bded87feb1..99b970ade0 100644
  {
      qemu_cond_timedwait(cond, &bql, ms);
 diff --git a/system/runstate.c b/system/runstate.c
-index 2d4e95a216..48f427f239 100644
+index 3c8693ccf3..f5eb062802 100644
 --- a/system/runstate.c
 +++ b/system/runstate.c
-@@ -63,6 +63,10 @@
- #include "system/tpm.h"
+@@ -66,6 +66,10 @@
+ 
  #include "trace.h"
  
 +#ifdef QEMU_UAE
@@ -147,7 +147,7 @@ index 2d4e95a216..48f427f239 100644
  static NotifierList exit_notifiers =
      NOTIFIER_LIST_INITIALIZER(exit_notifiers);
  
-@@ -942,12 +946,25 @@ int qemu_main_loop(void)
+@@ -925,12 +929,25 @@ int qemu_main_loop(void)
      int status = EXIT_SUCCESS;
  
      while (!main_loop_should_exit(&status)) {
@@ -1477,6 +1477,3 @@ index 0000000000..b7162f2494
 +#endif
 +
 +#endif /* UAE_TYPES_H */
--- 
-2.50.1 (Apple Git-155)
-

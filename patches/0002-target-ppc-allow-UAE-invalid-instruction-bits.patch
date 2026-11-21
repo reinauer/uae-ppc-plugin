@@ -1,7 +1,7 @@
-From be62f563689b609c97d48be7788ec3138c36f541 Mon Sep 17 00:00:00 2001
+From 40f97f99cad33eb64345a58b09e44ac67956e651 Mon Sep 17 00:00:00 2001
 From: Stefan <stefan.reinauer@coreboot.org>
 Date: Sat, 17 Jan 2026 20:37:45 -0800
-Subject: [PATCH 2/12] target/ppc: allow UAE invalid instruction bits
+Subject: [PATCH 02/15] target/ppc: allow UAE invalid instruction bits
 
 Skip the invalid-bits check for PPC instructions when QEMU_UAE is
 enabled.
@@ -13,7 +13,7 @@ so accepting them matches the accelerator behavior expected by UAE.
  1 file changed, 7 insertions(+)
 
 diff --git a/target/ppc/translate.c b/target/ppc/translate.c
-index a09a6df93f..f2ef68b47a 100644
+index 06ed2adf10..dd3d60360d 100644
 --- a/target/ppc/translate.c
 +++ b/target/ppc/translate.c
 @@ -6505,6 +6505,12 @@ static bool decode_legacy(PowerPCCPU *cpu, DisasContext *ctx, uint32_t insn)
@@ -37,6 +37,3 @@ index a09a6df93f..f2ef68b47a 100644
  
      handler->handler(ctx);
      return true;
--- 
-2.50.1 (Apple Git-155)
-

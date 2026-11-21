@@ -1,7 +1,7 @@
-From 43c467e3b90fdb23a9e6e700e35bf2925462b302 Mon Sep 17 00:00:00 2001
+From 2a7d3c9854befb8fea05b130b2657798ee6db0da Mon Sep 17 00:00:00 2001
 From: Stefan Reinauer <stefan.reinauer@coreboot.org>
 Date: Thu, 4 Jun 2026 13:50:17 -0700
-Subject: [PATCH 9/12] build: support Windows QEMU-UAE plugin output
+Subject: [PATCH 09/15] build: support Windows QEMU-UAE plugin output
 
 Make the QEMU-UAE configure wrapper respect an existing MSYS2
 compiler selection and prefer clang when it is available. The Windows
@@ -75,10 +75,10 @@ index 43a5a2f277..ad9212c452 100755
  *)
      EXTRA_CFLAGS="$EXTRA_CFLAGS -fPIC"
 diff --git a/meson.build b/meson.build
-index dd90b1647a..ed5bc88f42 100644
+index 0c53ef60b4..f8fda010b7 100644
 --- a/meson.build
 +++ b/meson.build
-@@ -4452,6 +4452,7 @@ foreach target : target_dirs
+@@ -4453,6 +4453,7 @@ foreach target : target_dirs
      if get_option('qemu_uae') and target_name == 'ppc'
        qemu_uae_link_args = []
        qemu_uae_link_depends = [block_syms, qemu_syms]
@@ -86,7 +86,7 @@ index dd90b1647a..ed5bc88f42 100644
        if host_os == 'darwin'
          qemu_uae_exports = files('uae/qemu-uae-ld64.symbols')
          qemu_uae_link_depends += qemu_uae_exports
-@@ -4471,7 +4472,7 @@ foreach target : target_dirs
+@@ -4472,7 +4473,7 @@ foreach target : target_dirs
                   link_depends: qemu_uae_link_depends,
                   link_args: qemu_uae_link_args,
                   name_prefix: '',
@@ -163,6 +163,3 @@ index 41a085d516..0e82e5e020 100644
  
  #endif
  
--- 
-2.50.1 (Apple Git-155)
-

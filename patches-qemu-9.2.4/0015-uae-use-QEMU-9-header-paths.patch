@@ -10,16 +10,12 @@ exec.
 Rewrite the include paths in the QEMU 9 overlay instead of probing for
 both layouts in the source.
 ---
- uae/qemu-uae-cpu.c  | 18 +++++++++---------
- uae/qemu-uae-main.c | 10 +++++-----
- 2 files changed, 14 insertions(+), 14 deletions(-)
 
 diff --git a/uae/qemu-uae-cpu.c b/uae/qemu-uae-cpu.c
-index b8db7a4049..a35c1880bd 100644
 --- a/uae/qemu-uae-cpu.c
 +++ b/uae/qemu-uae-cpu.c
-@@ -22,15 +22,15 @@
- #include "qemu/module.h"
+@@ -24,15 +24,15 @@
+ #include "qemu/timer.h"
  #include "qapi/error.h"
  #include "hw/ppc/ppc.h"
 -#include "hw/core/boards.h"
@@ -44,7 +40,6 @@ index b8db7a4049..a35c1880bd 100644
  #include "cpu.h"
  #include "helper_regs.h"
 diff --git a/uae/qemu-uae-main.c b/uae/qemu-uae-main.c
-index ec76c2b38b..44dc44d361 100644
 --- a/uae/qemu-uae-main.c
 +++ b/uae/qemu-uae-main.c
 @@ -26,11 +26,11 @@
