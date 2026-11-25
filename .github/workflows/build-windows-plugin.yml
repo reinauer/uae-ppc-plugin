@@ -100,7 +100,7 @@ jobs:
             ${{ matrix.package_prefix }}-python
             ${{ matrix.package_prefix }}-toolchain
 
-      - name: Install pip and distlib from PyPI
+      - name: Install pip, distlib and pycotap from PyPI
         if: matrix.glib_version != ''
         run: |
           set -euo pipefail
@@ -108,12 +108,17 @@ jobs:
           cd wheels
           curl -L --fail -O https://files.pythonhosted.org/packages/07/25/ee8c38ae72d66b844ce8eb9711ba905dba21ca1a8a0c960057c41cd23337/pip-26.3-py3-none-any.whl
           curl -L --fail -O https://files.pythonhosted.org/packages/c1/2b/238f02a4927fa2e27aa995371d240a468b52e42eae44a678434aff736b38/distlib-0.4.4-py2.py3-none-any.whl
+          curl -L --fail -O https://files.pythonhosted.org/packages/36/f4/77b5a41d53ae3c530b204ed9a35137171b20f8ee0f337e2ec4993d6026a5/pycotap-1.3.1-py3-none-any.whl
           sha256sum -c <<'EOF'
           f3b60b20ffaadd4415ed7957212a38ac63fa4c5fa375bd0f4a797777940fad13  pip-26.3-py3-none-any.whl
           cf09d55b1e85a89576b036aeb71550bfd68320f3f21761ca329eadadad918638  distlib-0.4.4-py2.py3-none-any.whl
+          1c3a25b3ff89e48f4e00f1f71dbbc1642b4f65c65d416524d07e73492fff25ea  pycotap-1.3.1-py3-none-any.whl
           EOF
+          # MSYS2's Python is externally managed (PEP 668), so pip won't
+          # install into it; python-installer does.
           python -m installer pip-26.3-py3-none-any.whl
           python -m installer distlib-0.4.4-py2.py3-none-any.whl
+          python -m installer pycotap-1.3.1-py3-none-any.whl
           python -m pip --version
 
       - name: Build static glib
@@ -176,7 +181,8 @@ jobs:
             export QEMU_UAE_EXTRA_PATCH_DIR="${workspace}/${{ matrix.extra_patch_dir }}"
           fi
 
-          if [[ "${QEMU_UAE_QEMU_VERSION}" == "9.2.4" ]]; then
+          if [[ "${QEMU_UAE_QEMU_VERSION}" == "9.2.4" ]] &&
+             ! python -c 'import pycotap' 2>/dev/null; then
             python -m pip install \
               --disable-pip-version-check \
               pycotap==1.3.1
