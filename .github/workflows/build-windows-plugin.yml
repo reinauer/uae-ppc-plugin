@@ -131,10 +131,10 @@ jobs:
             --exclude="glib-${version}/COPYING" \
             --exclude="glib-${version}/gmodule/COPYING"
           # The options of MSYS2's static glib2 build, without tests and
-          # documentation.
-          MSYS2_ARG_CONV_EXCL="--prefix=" \
-            meson setup glib-build "glib-${version}" \
-            --prefix="${MINGW_PREFIX}" \
+          # documentation.  meson is a Windows program and needs the
+          # Windows path of the MSYS2 prefix.
+          meson setup glib-build "glib-${version}" \
+            --prefix="$(cygpath -m "${MINGW_PREFIX}")" \
             --buildtype=release \
             --wrap-mode=nodownload \
             --auto-features=enabled \
@@ -150,6 +150,7 @@ jobs:
             -Dtests=false
           meson compile -C glib-build
           meson install -C glib-build
+          pkg-config --modversion glib-2.0
           pkg-config --static --libs glib-2.0
 
       - name: Build QEMU-UAE PPC plugin
