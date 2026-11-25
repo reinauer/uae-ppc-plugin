@@ -125,7 +125,11 @@ jobs:
           curl -L --fail -o "${tarball}" \
             "https://download.gnome.org/sources/glib/${version%.*}/${tarball}"
           echo "${{ matrix.glib_sha256 }}  ${tarball}" | sha256sum -c
-          tar -xf "${tarball}"
+          # MSYS2's tar copies symlink targets, which fails for links that
+          # come before their target; the build needs neither license link.
+          tar -xf "${tarball}" \
+            --exclude="glib-${version}/COPYING" \
+            --exclude="glib-${version}/gmodule/COPYING"
           # The options of MSYS2's static glib2 build, without tests and
           # documentation.
           MSYS2_ARG_CONV_EXCL="--prefix=" \
