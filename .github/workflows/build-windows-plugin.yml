@@ -27,6 +27,14 @@ jobs:
             runner: windows-latest
             msystem: MINGW32
             package_prefix: mingw-w64-i686
+            # MSYS2 no longer packages glib2, pip or distlib for MINGW32,
+            # so the 32-bit job builds a static glib and installs pip and
+            # distlib from PyPI.
+            packages: >-
+              gettext-runtime:p gettext-tools:p libffi:p libiconv:p
+              pcre2:p zlib:p python-installer:p python-packaging:p
+            glib_version: 2.90.1
+            glib_sha256: 93c941aa17d5eb1d53fe838365f29a8b4e539c222a256d974ec8f30fc413e396
             host_cpu: i386
             artifact: qemu-uae-windows-32bit
             dll_name: qemu-uae.dll
@@ -38,6 +46,9 @@ jobs:
             runner: windows-latest
             msystem: CLANG64
             package_prefix: mingw-w64-clang-x86_64
+            packages: glib2:p python-distlib:p python-pip:p
+            glib_version: ""
+            glib_sha256: ""
             host_cpu: x86_64
             artifact: qemu-uae-windows-64bit
             dll_name: qemu-uae_x64.dll
@@ -49,6 +60,9 @@ jobs:
             runner: windows-11-arm
             msystem: CLANGARM64
             package_prefix: mingw-w64-clang-aarch64
+            packages: glib2:p python-distlib:p python-pip:p
+            glib_version: ""
+            glib_sha256: ""
             host_cpu: aarch64
             artifact: qemu-uae-windows-arm64
             dll_name: qemu-uae_arm64.dll
@@ -70,6 +84,7 @@ jobs:
         with:
           msystem: ${{ matrix.msystem }}
           update: true
+          pacboy: ${{ matrix.packages }}
           install: >-
             base-devel
             curl
@@ -79,14 +94,59 @@ jobs:
             patch
             tar
             xz
-            ${{ matrix.package_prefix }}-glib2
             ${{ matrix.package_prefix }}-meson
             ${{ matrix.package_prefix }}-ninja
             ${{ matrix.package_prefix }}-pkgconf
             ${{ matrix.package_prefix }}-python
-            ${{ matrix.package_prefix }}-python-distlib
-            ${{ matrix.package_prefix }}-python-pip
             ${{ matrix.package_prefix }}-toolchain
+
+      - name: Install pip and distlib from PyPI
+        if: matrix.glib_version != ''
+        run: |
+          set -euo pipefail
+          mkdir -p wheels
+          cd wheels
+          curl -L --fail -O https://files.pythonhosted.org/packages/07/25/ee8c38ae72d66b844ce8eb9711ba905dba21ca1a8a0c960057c41cd23337/pip-26.3-py3-none-any.whl
+          curl -L --fail -O https://files.pythonhosted.org/packages/c1/2b/238f02a4927fa2e27aa995371d240a468b52e42eae44a678434aff736b38/distlib-0.4.4-py2.py3-none-any.whl
+          sha256sum -c <<'EOF'
+          f3b60b20ffaadd4415ed7957212a38ac63fa4c5fa375bd0f4a797777940fad13  pip-26.3-py3-none-any.whl
+          cf09d55b1e85a89576b036aeb71550bfd68320f3f21761ca329eadadad918638  distlib-0.4.4-py2.py3-none-any.whl
+          EOF
+          python -m installer pip-26.3-py3-none-any.whl
+          python -m installer distlib-0.4.4-py2.py3-none-any.whl
+          python -m pip --version
+
+      - name: Build static glib
+        if: matrix.glib_version != ''
+        run: |
+          set -euo pipefail
+          version="${{ matrix.glib_version }}"
+          tarball="glib-${version}.tar.xz"
+          curl -L --fail -o "${tarball}" \
+            "https://download.gnome.org/sources/glib/${version%.*}/${tarball}"
+          echo "${{ matrix.glib_sha256 }}  ${tarball}" | sha256sum -c
+          tar -xf "${tarball}"
+          # The options of MSYS2's static glib2 build, without tests and
+          # documentation.
+          MSYS2_ARG_CONV_EXCL="--prefix=" \
+            meson setup glib-build "glib-${version}" \
+            --prefix="${MINGW_PREFIX}" \
+            --buildtype=release \
+            --wrap-mode=nodownload \
+            --auto-features=enabled \
+            --default-library=static \
+            -Dlibelf=disabled \
+            -Dintrospection=disabled \
+            -Ddtrace=disabled \
+            -Dsystemtap=disabled \
+            -Dsysprof=disabled \
+            -Dglib_debug=disabled \
+            -Dman-pages=disabled \
+            -Ddocumentation=false \
+            -Dtests=false
+          meson compile -C glib-build
+          meson install -C glib-build
+          pkg-config --static --libs glib-2.0
 
       - name: Build QEMU-UAE PPC plugin
         run: |
